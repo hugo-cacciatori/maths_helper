@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowLeft, Check, Lightbulb, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Check, Dices, Lightbulb, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProgress } from '../lib/store';
-import type { Chapter, Lesson, Step } from '../lib/types';
+import { freshSeed, rng } from '../lib/random';
+import type { Chapter, Lesson, ShownStep, Step } from '../lib/types';
 import { Prose, renderInline } from './Prose';
 
 type Verdict = null | 'right' | 'wrong';
@@ -124,18 +125,32 @@ function keyTargetIsFree(t: EventTarget | null) {
   return !el.closest('[data-widget]');
 }
 
-export function StepView({
+export const resolveStep = (step: Step, variant: number): ShownStep => (step.kind === 'generated' ? step.make(rng(variant)) : step);
+
+type StepViewProps = {
+  step: Step;
+  seed: number;
+  /** Seed for a generated step's values; a fresh one is drawn when omitted. */
+  variant?: number;
+  onAdvance: () => void;
+  /** Called once per question: 'missed' after a wrong try or a reveal, 'clean' when right at the first try. */
+  onResult?: (r: 'missed' | 'clean') => void;
+};
+
+export function StepView({ step, variant: initialVariant, ...rest }: StepViewProps) {
+  const [variant, setVariant] = useState(() => initialVariant ?? freshSeed());
+  const shown = useMemo(() => resolveStep(step, variant), [step, variant]);
+  const newNumbers = step.kind === 'generated' ? () => setVariant(freshSeed()) : undefined;
+  return <ShownStepView key={variant} step={shown} onNewNumbers={newNumbers} {...rest} />;
+}
+
+function ShownStepView({
   step,
   seed,
   onAdvance,
   onResult,
-}: {
-  step: Step;
-  seed: number;
-  onAdvance: () => void;
-  /** Called once per question: 'missed' after a wrong try or a reveal, 'clean' when right at the first try. */
-  onResult?: (r: 'missed' | 'clean') => void;
-}) {
+  onNewNumbers,
+}: Omit<StepViewProps, 'step' | 'variant'> & { step: ShownStep; onNewNumbers?: () => void }) {
   const [solved, setSolved] = useState(false);
   const [verdict, setVerdict] = useState<Verdict>(null);
   const [tries, setTries] = useState(0);
@@ -378,6 +393,11 @@ export function StepView({
             {isQuestion && verdict === 'wrong' && tries >= 2 && (
               <button className="btn !py-2.5" onClick={reveal}>
                 Show answer
+              </button>
+            )}
+            {onNewNumbers && locked && (
+              <button className="btn !py-2.5" onClick={onNewNumbers}>
+                <Dices size={16} /> New numbers
               </button>
             )}
             {step.kind === 'task' && !solved && <span className="mr-auto text-sm text-muted">Complete the activity to continue</span>}

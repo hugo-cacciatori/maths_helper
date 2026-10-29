@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { Rng } from './random';
 
 /** Widgets receive this so a "task" step can unlock once the learner reaches the goal. */
 export type WidgetApi = { onSolved: () => void };
@@ -12,9 +13,7 @@ type StepBase = {
   hint?: string;
 };
 
-export type Step =
-  | (StepBase & { kind: 'read' })
-  | (StepBase & { kind: 'task'; widget: WidgetRender; success: string })
+export type QuestionStep =
   | (StepBase & { kind: 'choice'; options: string[]; answer: number; explain: string })
   | (StepBase & {
       kind: 'number';
@@ -31,6 +30,16 @@ export type Step =
       keepOrder?: boolean;
       explain: string;
     });
+
+export type Step =
+  | (StepBase & { kind: 'read' })
+  | (StepBase & { kind: 'task'; widget: WidgetRender; success: string })
+  | QuestionStep
+  /** Draws new values on every visit; `make` must be deterministic for a given random source. */
+  | { kind: 'generated'; make: (r: Rng) => QuestionStep };
+
+/** A step as shown: generated steps are already resolved to a concrete question. */
+export type ShownStep = Exclude<Step, { kind: 'generated' }>;
 
 export type Lesson = {
   id: string;

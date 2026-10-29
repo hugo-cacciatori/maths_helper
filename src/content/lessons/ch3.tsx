@@ -1,5 +1,42 @@
-import type { Lesson } from '../../lib/types';
+import { texNum } from '../../lib/random';
+import type { Lesson, QuestionStep } from '../../lib/types';
 import { BinarySearch, BsDecisionTree, JosephusCircle, JosephusTable, NimGame } from '../../widgets/shrink';
+
+/* ---------- practice questions with fresh numbers ---------- */
+
+export const bsMaxQ = (n: number): QuestionStep => {
+  const k = Math.floor(Math.log2(n));
+  return {
+    kind: 'number',
+    title: 'Practice',
+    body: `A sorted array holds $${texNum(n)}$ elements. What is the **maximum** number of comparisons binary search can make on it?`,
+    answer: k + 1,
+    hint: 'Each comparison at least halves the interval. How many halvings until one element is left?',
+    explain: `$2^{${k}} \\le ${texNum(n)} < 2^{${k + 1}}$, so the interval can be halved $${k}$ times before one element is left, plus the last comparison: $\\lfloor\\log_2 n\\rfloor + 1 = ${k + 1}$.`,
+  };
+};
+
+export const josephusQ = (n: number): QuestionStep => {
+  const m = 2 ** Math.floor(Math.log2(n));
+  const L = n - m;
+  return {
+    kind: 'number',
+    body: `Write $n = 2^m + L$ with $0 \\le L < 2^m$. After $L$ eliminations, $2^m$ people remain and the count restarts at person $2L + 1$, who therefore survives. Compute $J(${n})$.`,
+    answer: 2 * L + 1,
+    hint: `The largest power of two not above ${n} is ${m}.`,
+    explain: `$${n} = ${m} + ${L}$, so $J(${n}) = 2\\cdot ${L} + 1 = ${2 * L + 1}$. Bonus: in binary, $J(n)$ is $n$ with its leading 1 moved to the end: $${n.toString(2)}_2 \\to ${n.toString(2).slice(1)}1_2 = ${2 * L + 1}$.`,
+  };
+};
+
+export const nimMoveQ = (n: number, m: number): QuestionStep => {
+  const take = (n - 1) % (m + 1);
+  return {
+    kind: 'number',
+    body: `In general, with $n = ${n}$ tokens and $m = ${m}$, how many tokens should the first player take to win?`,
+    answer: take,
+    explain: `$(${n} - 1) \\bmod ${m + 1} = ${n - 1} \\bmod ${m + 1} = ${take}$. Taking ${take} leaves ${n - take}, and $${n - take} \\equiv 1 \\pmod{${m + 1}}$ — a losing position for the opponent.`,
+  };
+};
 
 const binsearch: Lesson = {
   id: 'c3l1',
@@ -51,6 +88,7 @@ Pick a value and step through the search on this sorted array.`,
       answer: 2,
       explain: 'Sequential search: about $n/2 = 500\\,000$ comparisons on average. Binary search: about $\\log_2 10^6 \\approx 20$. Ratio $\\approx 25\\,000$.',
     },
+    { kind: 'generated', make: (r) => bsMaxQ(r.int(20, 5000)) },
   ],
 };
 
@@ -91,16 +129,10 @@ Each round halves the circle. Look at the powers of two (in blue).`,
       answer: 0,
       explain: '$J(2k) = 2J(k) - 1$ and $J(1) = 1$ give $J(2^m) = 1$: with a power of two, every round removes exactly half and person 1 always starts again.',
     },
-    {
-      kind: 'number',
-      body: 'Write $n = 2^m + L$ with $0 \\le L < 2^m$. After $L$ eliminations, $2^m$ people remain and the count restarts at person $2L + 1$, who therefore survives. Compute $J(40)$ — the original story had 40 soldiers!',
-      answer: 17,
-      hint: '$40 = 32 + 8$.',
-      explain: '$40 = 2^5 + 8$, so $J(40) = 2\\cdot 8 + 1 = 17$. Bonus: in binary, $J(n)$ is $n$ with its leading 1 moved to the end: $101000_2 \\to 010001_2 = 17$.',
-    },
+    { kind: 'generated', make: (r) => josephusQ(r.pick([...Array(101).keys()].map((i) => i + 20).filter((n) => (n & (n - 1)) !== 0))) },
     {
       kind: 'task',
-      body: 'Check it on the circle: set $n = 40$ and press **Play**.',
+      body: 'Check the formula on the circle with the original story’s 40 people: $40 = 32 + 8$, so person $2 \\cdot 8 + 1 = 17$ should survive. Set $n = 40$ and press **Play**.',
       widget: ({ onSolved }) => <JosephusCircle initialN={40} onSolved={onSolved} />,
       success: 'Person 17 survives, as predicted.',
     },
@@ -140,10 +172,13 @@ const nim: Lesson = {
       success: 'Strategy: take $(n - 1) \\bmod (m+1)$ tokens. If that is 0, you are in a losing position — take 1 and hope your opponent makes a mistake!',
     },
     {
-      kind: 'number',
-      body: 'In general, with $n = 100$ tokens and $m = 5$, how many tokens should the first player take to win?',
-      answer: 3,
-      explain: '$(100 - 1) \\bmod 6 = 99 \\bmod 6 = 3$. Taking 3 leaves 97, and $97 \\equiv 1 \\pmod 6$ — a losing position for the opponent.',
+      kind: 'generated',
+      make: (r) => {
+        const m = r.int(2, 7);
+        // Skip losing starts: the first player must have a winning move.
+        const n = r.pick([...Array(131).keys()].map((i) => i + 20).filter((k) => (k - 1) % (m + 1) !== 0));
+        return nimMoveQ(n, m);
+      },
     },
   ],
 };

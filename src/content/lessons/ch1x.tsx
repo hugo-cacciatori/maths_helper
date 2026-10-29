@@ -1,4 +1,4 @@
-import type { Lesson } from '../../lib/types';
+import type { Lesson, QuestionStep } from '../../lib/types';
 import { CallChain, CelebrityFinder, GrillSim, type ChainSpec } from '../../widgets/cost-extra';
 import { CodeBlock } from '../../widgets/kit';
 
@@ -20,6 +20,13 @@ export const minSpec: ChainSpec = {
     note: `Low(${k}) compares Low(${k - 1}) = ${sub} with the next value ${MIN_DATA[k - 1]} → ${Math.min(sub, MIN_DATA[k - 1])}.`,
   }),
 };
+
+export const cubeMultsQ = (n: number): QuestionStep => ({
+  kind: 'number',
+  body: `Unroll it: how many multiplications does $S(${n})$ make?`,
+  answer: 2 * (n - 1),
+  explain: `$M(n) = 2(n - 1)$, so $M(${n}) = ${2 * (n - 1)}$.`,
+});
 
 const recursionCount: Lesson = {
   id: 'c1l7',
@@ -44,12 +51,7 @@ const recursionCount: Lesson = {
       answer: 1,
       explain: '`n × n × n` is two multiplications, plus whatever the smaller call does. The base case multiplies nothing.',
     },
-    {
-      kind: 'number',
-      body: 'Unroll it: how many multiplications does $S(10)$ make?',
-      answer: 18,
-      explain: '$M(n) = 2(n - 1)$, so $M(10) = 18$.',
-    },
+    { kind: 'generated', make: (r) => cubeMultsQ(r.int(5, 40)) },
     {
       kind: 'choice',
       body: 'A simple loop `for i ← 1 to n: s ← s + i × i × i` computes the same sum. How do the two compare?',

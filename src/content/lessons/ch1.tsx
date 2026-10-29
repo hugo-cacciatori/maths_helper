@@ -1,4 +1,5 @@
-import type { Lesson } from '../../lib/types';
+import { texNum } from '../../lib/random';
+import type { Lesson, QuestionStep } from '../../lib/types';
 import { CodeBlock } from '../../widgets/kit';
 import {
   DoublingBars,
@@ -136,6 +137,87 @@ const algoQ: Program = {
   },
 };
 
+/* ---------- practice questions with fresh numbers ---------- */
+
+const term = (c: number, p: number) => `${c === 1 ? '' : c}${p === 1 ? 'n' : `n^${p}`}`;
+const RELATIONS = ['$f_1 \\in \\Theta(f_2)$', '$f_1 \\in O(f_2)$ but not $\\Theta$', '$f_1 \\in \\Omega(f_2)$ but not $\\Theta$'];
+
+export const quadrupleQ = (k: number): QuestionStep => ({
+  kind: 'number',
+  body: `If $f(n) = n^${k}$, by what factor is $f$ multiplied when $n$ is quadrupled?`,
+  answer: 4 ** k,
+  suffix: '×',
+  explain: `$(4n)^${k} = 4^${k} n^${k} = ${texNum(4 ** k)}\\,n^${k}$.`,
+});
+
+export const compareQ = (a: number, p: number, b: number, q: number): QuestionStep => ({
+  kind: 'choice',
+  title: 'Practice',
+  body: `Compare $f_1(n) = ${term(a, p)}$ with $f_2(n) = ${term(b, q)}$.`,
+  options: RELATIONS,
+  answer: p === q ? 0 : p < q ? 1 : 2,
+  explain:
+    p === q
+      ? `Same degree: the ratio $f_1/f_2 \\to ${a}/${b}$, a positive constant, so $\\Theta$. Coefficients never change the order.`
+      : p < q
+        ? `$f_1/f_2 = \\dfrac{${a}}{${b}\\,${term(1, q - p)}} \\to 0$: $f_1$ grows strictly slower whatever the coefficients, so $O$ but not $\\Theta$.`
+        : `$f_1/f_2 = \\dfrac{${a}\\,${term(1, p - q)}}{${b}} \\to \\infty$: $f_1$ grows strictly faster whatever the coefficients, so $\\Omega$ but not $\\Theta$.`,
+});
+
+export const triangleQ = (N: number): QuestionStep => ({
+  kind: 'number',
+  title: 'A triangle of work (Loop C)',
+  body: `In program **Loop C** the inner loop is \`while J < I\`. Run it with $N = ${N}$: how many times does \`increment J\` execute?`,
+  widget: () => <LoopLab programs={[loopD]} />,
+  answer: (N * (N - 1)) / 2,
+  hint: `For I = 1 the inner loop runs 0 times, for I = 2 once, … for I = ${N} it runs ${N - 1} times.`,
+  explain: `$0+1+\\dots+${N - 1} = \\dfrac{N(N-1)}{2} = ${(N * (N - 1)) / 2}$. Half of the square, but still $\\Theta(N^2)$ — the ½ is just a constant.`,
+});
+
+export const oddSumQ = (k: number): QuestionStep => ({
+  kind: 'number',
+  body: `Compute $1 + 3 + 5 + 7 + \\dots + ${2 * k - 1}$.`,
+  answer: k * k,
+  hint: `How many odd numbers are there from 1 to ${2 * k - 1}? If $2k - 1 = ${2 * k - 1}$, then $k = ?$`,
+  explain: `$${2 * k - 1} = 2k - 1$ gives $k = ${k}$ terms, and the picture says the sum of the first $k$ odd numbers is $k^2 = ${k}^2 = ${texNum(k * k)}$.`,
+});
+
+export const doublingSumQ = (k: number): QuestionStep => ({
+  kind: 'number',
+  body: `Compute $2 + 4 + 8 + 16 + \\dots + ${texNum(2 ** k)}$.`,
+  answer: 2 ** (k + 1) - 2,
+  explain: `$${texNum(2 ** k)} = 2^{${k}}$, so the sum is $2^{${k + 1}} - 2 = ${texNum(2 ** (k + 1))} - 2 = ${texNum(2 ** (k + 1) - 2)}$. In general $\\sum_{i=1}^{k} 2^i = 2^{k+1} - 2$.`,
+});
+
+export const rangeCompsQ = (n: number): QuestionStep => ({
+  kind: 'number',
+  body: `Each iteration makes 2 comparisons between elements. How many element comparisons for an array of $n = ${n}$ elements?`,
+  answer: 2 * (n - 1),
+  explain: `$n - 1 = ${n - 1}$ iterations × 2 comparisons $= 2(n-1) = ${2 * (n - 1)}$. That is $\\Theta(n)$ — and you will see later that $\\approx 1.5n$ comparisons are enough!`,
+});
+
+export const symmetricCompsQ = (n: number): QuestionStep => ({
+  kind: 'number',
+  body: `In the **worst case** (a symmetric matrix, so it never returns early), how many comparisons does R make for $n = ${n}$?`,
+  answer: (n * (n - 1)) / 2,
+  hint: 'For $i = 0$ there are $n-1$ values of $j$, for $i = 1$ there are $n-2$…',
+  explain: `$\\sum_{i=0}^{n-2}(n-1-i) = (n-1) + \\dots + 1 = \\frac{n(n-1)}{2} = ${(n * (n - 1)) / 2}$. Worst-case cost: $\\Theta(n^2)$.`,
+});
+
+export const addConstQ = (c: number, N: number): QuestionStep => ({
+  kind: 'number',
+  body: `With $x(n) = x(n-1) + ${c}$ and $x(1) = 0$, what is $x(${N})$?`,
+  answer: c * (N - 1),
+  explain: `$x(n) = ${c}(n-1)$, so $x(${N}) = ${c} \\times ${N - 1} = ${c * (N - 1)}$.`,
+});
+
+export const twoCallsQ = (n: number): QuestionStep => ({
+  kind: 'number',
+  body: `With the two-call version, how many calls are made in total for $n = ${n}$?`,
+  answer: 2 ** (n + 1) - 1,
+  explain: `$2^{${n}+1} - 1 = ${2 ** (n + 1) - 1}$ calls, and $A(n) = 2A(n-1) + 1$ gives $2^n - 1 = ${2 ** n - 1}$ additions.`,
+});
+
 /* ---------- lessons ---------- */
 
 const growth: Lesson = {
@@ -215,13 +297,7 @@ Simplify $f(n,m) = 3n^2 + 4n + \\dfrac{1}{n} + m + nm$.`,
         />
       ),
     },
-    {
-      kind: 'number',
-      body: 'If $f(n) = n^3$, by what factor is $f$ multiplied when $n$ is quadrupled?',
-      answer: 64,
-      suffix: '×',
-      explain: '$(4n)^3 = 4^3 n^3 = 64\\,n^3$.',
-    },
+    { kind: 'generated', make: (r) => quadrupleQ(r.int(2, 5)) },
     {
       kind: 'choice',
       body: 'And for $f(n) = \\log_2 n$, what happens to $f$ when $n$ is quadrupled?',
@@ -251,6 +327,15 @@ Simplify $f(n,m) = 3n^2 + 4n + \\dfrac{1}{n} + m + nm$.`,
       options: ['$\\dfrac{n(n+1)}{2} \\in O(n^3)$', '$\\dfrac{n(n+1)}{2} \\in O(n^2)$', '$\\dfrac{n(n+1)}{2} \\in \\Theta(n^3)$', '$\\dfrac{n(n+1)}{2} \\in \\Omega(n)$'],
       answer: 2,
       explain: '$n(n+1)/2 \\approx n^2/2$ is $\\Theta(n^2)$. It is in $O(n^3)$ (grows no faster) and $\\Omega(n)$ (grows at least as fast), but **not** $\\Theta(n^3)$: $n^3$ is a strictly bigger order.',
+    },
+    {
+      kind: 'generated',
+      make: (r) => {
+        const [p, q] = [r.int(1, 4), r.int(1, 4)];
+        // The bigger coefficient goes on the slower function, so small values of n mislead.
+        const [big, small] = [r.int(10, 50), r.int(1, 3)];
+        return compareQ(p <= q ? big : small, p, p <= q ? small : big, q);
+      },
     },
   ],
 };
@@ -282,15 +367,7 @@ Step through this simple loop. Watch the highlighted line and the counter.`,
       answer: 2,
       explain: 'The doubling ratio is exactly 4 = $2^2$: quadratic, $\\Theta(N^2)$.',
     },
-    {
-      kind: 'number',
-      title: 'A triangle of work (Loop C)',
-      body: 'In program **Loop C** the inner loop is `while J < I`. Run it with $N = 6$: how many times does `increment J` execute?',
-      widget: () => <LoopLab programs={[loopD]} />,
-      answer: 15,
-      hint: 'For I = 1 the inner loop runs 0 times, for I = 2 once, … for I = 6 five times.',
-      explain: '$0+1+2+3+4+5 = 15 = \\dfrac{N(N-1)}{2}$. Half of the square, but still $\\Theta(N^2)$ — the ½ is just a constant.',
-    },
+    { kind: 'generated', make: (r) => triangleQ(r.int(4, 12)) },
     {
       kind: 'choice',
       title: 'Doubling the counter (Loop D)',
@@ -333,25 +410,14 @@ const sums: Lesson = {
       body: 'Loop counts are sums, so we need to compute sums quickly. A picture first: stack the odd numbers $1, 3, 5, \\dots$ as L-shaped layers. Move the slider.',
       widget: () => <OddSquares />,
     },
-    {
-      kind: 'number',
-      body: 'Compute $1 + 3 + 5 + 7 + \\dots + 999$.',
-      answer: 250000,
-      hint: 'How many odd numbers are there from 1 to 999? If $2k - 1 = 999$, then $k = ?$',
-      explain: '$999 = 2k - 1$ gives $k = 500$ terms, and the picture says the sum of the first $k$ odd numbers is $k^2 = 500^2 = 250\\,000$.',
-    },
+    { kind: 'generated', make: (r) => oddSumQ(r.int(20, 600)) },
     {
       kind: 'read',
       title: 'Doubling sums',
       body: 'Geometric sums behave very differently: each term is as big as **all the previous ones together** (plus the first). Look at how the bars fill the next power of two.',
       widget: () => <DoublingBars />,
     },
-    {
-      kind: 'number',
-      body: 'Compute $2 + 4 + 8 + 16 + \\dots + 1024$.',
-      answer: 2046,
-      explain: '$1024 = 2^{10}$, so the sum is $2^{11} - 2 = 2048 - 2 = 2046$. In general $\\sum_{i=1}^{k} 2^i = 2^{k+1} - 2$.',
-    },
+    { kind: 'generated', make: (r) => doublingSumQ(r.int(5, 14)) },
     {
       kind: 'choice',
       body: 'Compute $\\displaystyle\\sum_{i=3}^{n+1} 1$.',
@@ -449,12 +515,7 @@ Run algorithm P for a few values of $n$ and watch $S$.`,
       answer: 2,
       explain: 'It tracks both the minimum and the maximum, then returns $\\max - \\min$: the **range** of the array.',
     },
-    {
-      kind: 'number',
-      body: 'Each iteration makes 2 comparisons between elements. How many element comparisons for an array of $n = 8$ elements?',
-      answer: 14,
-      explain: '$n - 1 = 7$ iterations × 2 comparisons $= 2(n-1) = 14$. That is $\\Theta(n)$ — and you will see later that $\\approx 1.5n$ comparisons are enough!',
-    },
+    { kind: 'generated', make: (r) => rangeCompsQ(r.int(5, 40)) },
     {
       kind: 'read',
       title: 'Algorithm R',
@@ -473,13 +534,7 @@ Run algorithm P for a few values of $n$ and watch $S$.`,
       answer: 1,
       explain: 'It compares every element above the diagonal with its mirror $A[j,i]$: it returns true iff the matrix is **symmetric**.',
     },
-    {
-      kind: 'number',
-      body: 'In the **worst case** (a symmetric matrix, so it never returns early), how many comparisons does R make for $n = 5$?',
-      answer: 10,
-      hint: 'For $i = 0$ there are $n-1$ values of $j$, for $i = 1$ there are $n-2$…',
-      explain: '$\\sum_{i=0}^{n-2}(n-1-i) = (n-1) + \\dots + 1 = \\frac{n(n-1)}{2} = 10$. Worst-case cost: $\\Theta(n^2)$.',
-    },
+    { kind: 'generated', make: (r) => symmetricCompsQ(r.int(4, 30)) },
   ],
 };
 
@@ -509,12 +564,7 @@ Check guesses against the real values below.`,
         />
       ),
     },
-    {
-      kind: 'number',
-      body: 'With $x(n) = x(n-1) + 5$ and $x(1) = 0$, what is $x(100)$?',
-      answer: 495,
-      explain: '$x(n) = 5(n-1)$, so $x(100) = 5 \\times 99 = 495$.',
-    },
+    { kind: 'generated', make: (r) => addConstQ(r.int(2, 9), r.int(20, 200)) },
     {
       kind: 'choice',
       body: 'Solve $x(n) = 3x(n-1)$ for $n > 1$, $x(1) = 4$. Use the checker.',
@@ -592,12 +642,7 @@ Check guesses against the real values below.`,
       widget: ({ onSolved }) => <PowerCallTree onSolved={onSolved} />,
       success: 'The tree doubles at each level: $1 + 2 + 4 + \\dots + 2^n = 2^{n+1} - 1$ calls.',
     },
-    {
-      kind: 'number',
-      body: 'With the two-call version, how many calls are made in total for $n = 5$?',
-      answer: 63,
-      explain: '$2^{5+1} - 1 = 63$ calls, and $A(n) = 2A(n-1) + 1$ gives $2^n - 1 = 31$ additions.',
-    },
+    { kind: 'generated', make: (r) => twoCallsQ(r.int(3, 8)) },
     {
       kind: 'choice',
       body: 'Is this a good algorithm for computing $2^n$?',
