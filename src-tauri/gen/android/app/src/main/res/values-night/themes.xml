@@ -1,6 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Theme.algo_visual" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your theme here. -->
+        <!-- Same as the page background (the CSS bg token), so the strips behind the system bars match the app. -->
+        <item name="android:windowBackground">@color/app_bg</item>
     </style>
 </resources>
