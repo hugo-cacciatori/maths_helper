@@ -1,8 +1,10 @@
+import { MotionConfig } from 'motion/react';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { Home } from './components/Home';
 import { LessonPlayer } from './components/LessonPlayer';
+import { ReviewPlayer } from './components/ReviewPlayer';
 import { allLessons } from './content';
 import 'katex/dist/katex.min.css';
 import './index.css';
@@ -17,12 +19,15 @@ function LessonRoute() {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <HashRouter>
+    <MotionConfig reducedMotion="user">
+      <HashRouter>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/lesson/:id" element={<LessonRoute />} />
+        <Route path="/review" element={<ReviewPlayer />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </HashRouter>
+      </HashRouter>
+    </MotionConfig>
   </StrictMode>,
 );

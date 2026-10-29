@@ -1,10 +1,11 @@
-import { CheckCircle2, ChevronRight, PlayCircle, RotateCcw } from 'lucide-react';
+import { CheckCircle2, ChevronRight, History, PlayCircle, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { allLessons, chapters } from '../content';
 import { useProgress } from '../lib/store';
 
 export function Home() {
-  const { completed, stepOf, reset } = useProgress();
+  const { completed, stepOf, missed, reset } = useProgress();
+  const toReview = Object.values(missed).reduce((a, m) => a + m.length, 0);
   const done = allLessons.filter((l) => completed[l.lesson.id]).length;
   const resume = allLessons.find((l) => !completed[l.lesson.id]);
 
@@ -36,6 +37,11 @@ export function Home() {
             {resume && (
               <Link to={`/lesson/${resume.lesson.id}`} className="btn-primary">
                 <PlayCircle size={18} /> {done === 0 ? 'Start learning' : 'Continue'}
+              </Link>
+            )}
+            {toReview > 0 && (
+              <Link to="/review" className="btn !py-2">
+                <History size={16} /> Review mistakes ({toReview})
               </Link>
             )}
           </div>

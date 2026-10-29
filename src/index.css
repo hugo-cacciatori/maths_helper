@@ -128,3 +128,14 @@ body {
 .code {
   @apply font-mono text-[13px] leading-6;
 }
+
+/* Honour the system "reduce motion" setting (Motion handles its own animations via MotionConfig). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

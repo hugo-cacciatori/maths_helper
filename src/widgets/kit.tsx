@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { renderInline } from '../components/Prose';
 
 /* ---------- layout ---------- */
@@ -177,7 +177,7 @@ export function ArrayRow({
   wrap?: boolean;
 }) {
   return (
-    <div className={wrap ? 'pb-1' : 'overflow-x-auto pb-1'}>
+    <div className={wrap ? 'pb-1' : 'overflow-x-auto pb-1'} role="group" aria-label={`Row of ${items.length}: ${items.map((it) => plain(it.label)).join(', ')}`}>
       <div className={wrap ? 'flex flex-wrap justify-center gap-1.5 px-1' : 'mx-auto flex w-max gap-1.5 px-1'}>
         {items.map((it, i) => {
           const t = tone?.(i) ?? 'idle';
@@ -216,6 +216,44 @@ export function ArrayRow({
   );
 }
 
+/* ---------- readable drawings on narrow screens ---------- */
+
+/**
+ * Returns a ref for an <svg> and a factor ≥ 1 to enlarge labels and shapes when the drawing is rendered
+ * much narrower than its design width (phones), so text stays legible instead of shrinking with it.
+ */
+export function useLegibleScale(designWidth: number, max = 1.4) {
+  const ref = useRef<SVGSVGElement>(null);
+  const [k, setK] = useState(1);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(([e]) => {
+      const w = e.contentRect.width;
+      if (w > 0) setK(Math.min(max, Math.max(1, (0.8 * designWidth) / w)));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [designWidth, max]);
+  return [ref, k] as const;
+}
+
+/** Keyboard activation for clickable SVG shapes (they are not native buttons). */
+const keyActivate = (fn?: () => void) =>
+  fn
+    ? {
+        tabIndex: 0,
+        onKeyDown: (e: ReactKeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fn();
+          }
+        },
+      }
+    : {};
+
+const plain = (v: ReactNode) => (typeof v === 'string' || typeof v === 'number' ? String(v) : '');
+
 /* ---------- graphs ---------- */
 
 export type GNode = { id: string; x: number; y: number; label?: string; w?: number };
@@ -245,12 +283,25 @@ export function GraphView({
   /** Draw nodes as labelled rectangles (for long names like city names). */
   rect?: boolean;
 }) {
+  const [svgRef, k] = useLegibleScale(width);
   const pos = Object.fromEntries(nodes.map((n) => [n.id, n]));
-  const halfW = (n: GNode) => (rect ? (n.w ?? 90) / 2 : r);
-  const halfH = rect ? 15 : r;
+  const rr = r * k;
+  const halfW = (n: GNode) => (rect ? ((n.w ?? 90) / 2) * k : rr);
+  const halfH = rect ? 15 * k : rr;
   const edgeColor = { idle: 'var(--v-idle-stroke)', active: 'var(--v-active)', tree: 'var(--v-visit)', dim: 'var(--v-dim)' };
+  const name = (id: string) => pos[id].label ?? id;
+  const description = `Graph with ${nodes.length} vertices (${nodes.map((n) => name(n.id)).join(', ')}) and edges ${edges
+    .map((e) => `${name(e.u)} ${e.directed ? 'to' : '–'} ${name(e.v)}${e.w !== undefined ? ` (${e.w})` : ''}`)
+    .join(', ')}`;
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="mx-auto w-full" style={{ maxWidth: width }}>
+    <svg
+      ref={svgRef}
+      viewBox={`0 0 ${width} ${height}`}
+      className="mx-auto w-full overflow-visible"
+      style={{ maxWidth: width }}
+      role={onNodeClick ? 'group' : 'img'}
+      aria-label={description}
+    >
       <defs>
         {Object.entries(edgeColor).map(([k, c]) => (
           <marker key={k} id={`arrow-${k}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -266,7 +317,7 @@ export function GraphView({
         const len = Math.hypot(dx, dy) || 1;
         // Clip the line at the node boundary (circle or box) so arrowheads stay visible.
         const clip = (n: GNode) => {
-          if (!rect) return r;
+          if (!rect) return rr;
           const tx = Math.abs(dx) > 0 ? halfW(n) / Math.abs(dx / len) : Infinity;
           const ty = Math.abs(dy) > 0 ? halfH / Math.abs(dy / len) : Infinity;
           return Math.min(tx, ty);
@@ -288,15 +339,15 @@ export function GraphView({
               x2={x2}
               y2={y2}
               stroke={edgeColor[t]}
-              strokeWidth={t === 'idle' || t === 'dim' ? 2 : 4}
+              strokeWidth={(t === 'idle' || t === 'dim' ? 2 : 4) * k}
               strokeLinecap="round"
               markerEnd={e.directed ? `url(#arrow-${t})` : undefined}
               style={{ transition: 'stroke 0.3s, stroke-width 0.3s' }}
             />
             {e.w !== undefined && (
               <g>
-                <rect x={mx - 13} y={my - 10} width={26} height={20} rx={6} fill="var(--surface)" stroke="var(--border)" />
-                <text x={mx} y={my + 4.5} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--muted)" fontFamily="var(--font-mono)">
+                <rect x={mx - 13 * k} y={my - 10 * k} width={26 * k} height={20 * k} rx={6 * k} fill="var(--surface)" stroke="var(--border)" />
+                <text x={mx} y={my + 4.5 * k} textAnchor="middle" fontSize={12 * k} fontWeight={700} fill="var(--muted)" fontFamily="var(--font-mono)">
                   {e.w}
                 </text>
               </g>
@@ -315,6 +366,8 @@ export function GraphView({
             style={{ cursor: onNodeClick ? 'pointer' : 'default' }}
             role={onNodeClick ? 'button' : undefined}
             aria-label={onNodeClick ? `Node ${n.label ?? n.id}` : undefined}
+            className="outline-none focus-visible:[&>*:first-child]:stroke-[var(--brand)]"
+            {...keyActivate(onNodeClick && (() => onNodeClick(n.id)))}
           >
             {rect ? (
               <rect
@@ -329,13 +382,13 @@ export function GraphView({
                 style={{ transition: 'fill 0.3s' }}
               />
             ) : (
-              <circle cx={n.x} cy={n.y} r={r} fill={toneBg[t]} stroke={strong ? 'transparent' : 'var(--v-idle-stroke)'} strokeWidth={2} style={{ transition: 'fill 0.3s' }} />
+              <circle cx={n.x} cy={n.y} r={rr} fill={toneBg[t]} stroke={strong ? 'transparent' : 'var(--v-idle-stroke)'} strokeWidth={2} style={{ transition: 'fill 0.3s' }} />
             )}
             <text
               x={n.x}
-              y={n.y + 5}
+              y={n.y + 5 * k}
               textAnchor="middle"
-              fontSize={rect ? 12.5 : 15}
+              fontSize={(rect ? 12.5 : 15) * k}
               fontWeight={700}
               fill={strong ? '#fff' : 'var(--v-ink)'}
               style={{ pointerEvents: 'none' }}
@@ -344,8 +397,8 @@ export function GraphView({
             </text>
             {b !== undefined && (
               <g style={{ pointerEvents: 'none' }}>
-                <rect x={n.x - 18} y={n.y - halfH - 24} width={36} height={18} rx={9} fill="var(--brand-soft)" />
-                <text x={n.x} y={n.y - halfH - 11} textAnchor="middle" fontSize={11.5} fontWeight={700} fill="var(--brand)" fontFamily="var(--font-mono)">
+                <rect x={n.x - 18 * k} y={n.y - halfH - 24 * k} width={36 * k} height={18 * k} rx={9 * k} fill="var(--brand-soft)" />
+                <text x={n.x} y={n.y - halfH - 11 * k} textAnchor="middle" fontSize={11.5 * k} fontWeight={700} fill="var(--brand)" fontFamily="var(--font-mono)">
                   {b}
                 </text>
               </g>
@@ -412,8 +465,16 @@ export function TreeView({
   const P = (id: string) => ({ x: offset + pos[id].x * colW, y: 36 + pos[id].y * rowH });
   const height = 36 + depth * rowH + r + 14;
   if (!root) return <div className="py-8 text-center text-sm text-muted">(empty tree)</div>;
+  const describe = (n: TNode | null | undefined): string =>
+    !n ? '' : n.left || n.right ? `${n.label} (left: ${describe(n.left) || 'none'}; right: ${describe(n.right) || 'none'})` : n.label;
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="mx-auto w-full" style={{ maxWidth: width }}>
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="mx-auto w-full"
+      style={{ maxWidth: width }}
+      role={onNodeClick ? 'group' : 'img'}
+      aria-label={`Tree: ${describe(root)}`}
+    >
       {edges.map(([a, b]) => {
         const pa = P(a);
         const pb = P(b);
@@ -441,6 +502,10 @@ export function TreeView({
             transition={{ type: 'spring', stiffness: 200, damping: 26 }}
             onClick={() => onNodeClick?.(id)}
             style={{ cursor: onNodeClick ? 'pointer' : 'default' }}
+            role={onNodeClick ? 'button' : undefined}
+            aria-label={onNodeClick ? `Node ${labels[id]}` : undefined}
+            className="outline-none focus-visible:[&>*:first-child]:stroke-[var(--brand)]"
+            {...keyActivate(onNodeClick && (() => onNodeClick(id)))}
           >
             <circle r={r} fill={toneBg[t]} stroke={strong ? 'transparent' : 'var(--v-idle-stroke)'} strokeWidth={2} style={{ transition: 'fill 0.3s' }} />
             <text y={5} textAnchor="middle" fontSize={14} fontWeight={700} fill={strong ? '#fff' : 'var(--v-ink)'} style={{ pointerEvents: 'none' }}>

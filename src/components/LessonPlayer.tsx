@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowLeft, Check, Lightbulb, Sparkles, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useProgress } from '../lib/store';
 import type { Chapter, Lesson, Step } from '../lib/types';
@@ -21,7 +21,7 @@ function shuffled<T>(arr: T[], seed: number) {
 }
 
 export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; chapter: Chapter; nextLesson?: Lesson }) {
-  const { stepOf, setStep, complete } = useProgress();
+  const { stepOf, setStep, complete, addMissed, removeMissed } = useProgress();
   const [idx, setIdx] = useState(() => Math.min(stepOf[lesson.id] ?? 0, lesson.steps.length - 1));
   const [finished, setFinished] = useState(false);
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
       setIdx(idx + 1);
       setStep(lesson.id, idx + 1);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
   };
 
   return (
@@ -100,7 +100,12 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.22 }}
             >
-              <StepView step={step} seed={idx + lesson.id.length} onAdvance={advance} />
+              <StepView
+                step={step}
+                seed={idx + lesson.id.length}
+                onAdvance={advance}
+                onResult={(r) => (r === 'missed' ? addMissed(lesson.id, idx) : removeMissed(lesson.id, idx))}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -109,7 +114,28 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
   );
 }
 
-export function StepView({ step, seed, onAdvance }: { step: Step; seed: number; onAdvance: () => void }) {
+export const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+/** Enter / number keys must not hijack typing or the controls inside an interactive widget. */
+function keyTargetIsFree(t: EventTarget | null) {
+  const el = t as HTMLElement | null;
+  if (!el || !el.closest) return true;
+  if (el.closest('input, textarea, select, [contenteditable="true"]')) return false;
+  return !el.closest('[data-widget]');
+}
+
+export function StepView({
+  step,
+  seed,
+  onAdvance,
+  onResult,
+}: {
+  step: Step;
+  seed: number;
+  onAdvance: () => void;
+  /** Called once per question: 'missed' after a wrong try or a reveal, 'clean' when right at the first try. */
+  onResult?: (r: 'missed' | 'clean') => void;
+}) {
   const [solved, setSolved] = useState(false);
   const [verdict, setVerdict] = useState<Verdict>(null);
   const [tries, setTries] = useState(0);
@@ -136,6 +162,8 @@ export function StepView({ step, seed, onAdvance }: { step: Step; seed: number; 
     if (step.kind === 'number') ok = Math.abs(Number(num.replace(',', '.')) - step.answer) <= (step.tolerance ?? 1e-9);
     if (step.kind === 'sequence') ok = seq.map((k) => tokens[k]).join('|') === step.answer.join('|');
     setVerdict(ok ? 'right' : 'wrong');
+    if (!ok && tries === 0) onResult?.('missed');
+    if (ok && tries === 0) onResult?.('clean');
     setTries((t) => t + 1);
   };
 
@@ -161,6 +189,34 @@ export function StepView({ step, seed, onAdvance }: { step: Step; seed: number; 
   };
 
   const locked = verdict === 'right';
+  const canContinue = !isQuestion ? step.kind !== 'task' || solved : locked;
+
+  // Keyboard: Enter = main button, 1–9 / A–F = pick a choice.
+  const keys = useRef<(e: KeyboardEvent) => void>(() => {});
+  keys.current = (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || !keyTargetIsFree(e.target)) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (isQuestion && !locked) {
+        if (verdict === 'wrong') retry();
+        else if (canCheck) check();
+      } else if (canContinue) onAdvance();
+      return;
+    }
+    if (step.kind === 'choice' && !locked) {
+      const k = /^[1-9]$/.test(e.key) ? Number(e.key) - 1 : /^[a-f]$/i.test(e.key) ? e.key.toLowerCase().charCodeAt(0) - 97 : -1;
+      if (k >= 0 && k < step.options.length) {
+        setChoice(k);
+        if (verdict === 'wrong') setVerdict(null);
+      }
+    }
+  };
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => keys.current(e);
+    window.addEventListener('keydown', h, true);
+    return () => window.removeEventListener('keydown', h, true);
+  }, []);
+
   const explain = 'explain' in step ? step.explain : step.kind === 'task' ? step.success : '';
 
   return (
@@ -169,7 +225,9 @@ export function StepView({ step, seed, onAdvance }: { step: Step; seed: number; 
       <Prose text={step.body} className="text-[16.5px]" />
 
       {step.widget && (
-        <div className="mt-5 rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5">{step.widget({ onSolved })}</div>
+        <div data-widget className="mt-5 rounded-2xl border border-border bg-surface p-4 shadow-sm sm:p-5">
+          {step.widget({ onSolved })}
+        </div>
       )}
 
       {step.hint && !locked && (
@@ -231,7 +289,12 @@ export function StepView({ step, seed, onAdvance }: { step: Step; seed: number; 
               setNum(e.target.value);
               if (verdict === 'wrong') setVerdict(null);
             }}
-            onKeyDown={(e) => e.key === 'Enter' && canCheck && !locked && check()}
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return;
+              if (verdict === 'wrong') retry();
+              else if (canCheck && !locked) check();
+              else if (locked) onAdvance();
+            }}
             placeholder="Your answer"
             className={`w-48 rounded-xl border-2 bg-surface px-4 py-2.5 font-mono text-lg outline-none transition focus:border-brand ${
               verdict === 'right' ? 'border-ok' : verdict === 'wrong' ? 'border-bad' : 'border-border'
@@ -326,21 +389,29 @@ export function StepView({ step, seed, onAdvance }: { step: Step; seed: number; 
             {isQuestion && !locked ? (
               verdict === 'wrong' ? (
                 <button className="btn-primary min-w-32" onClick={retry}>
-                  Try again
+                  Try again <Kbd />
                 </button>
               ) : (
                 <button className="btn-primary min-w-32" disabled={!canCheck} onClick={check}>
-                  Check
+                  Check <Kbd />
                 </button>
               )
             ) : (
-              <button className="btn-primary min-w-32" disabled={step.kind === 'task' && !solved} onClick={onAdvance}>
-                Continue
+              <button className="btn-primary min-w-32" disabled={!canContinue} onClick={onAdvance}>
+                Continue <Kbd />
               </button>
             )}
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function Kbd() {
+  return (
+    <kbd aria-hidden className="hidden rounded border border-current/30 px-1 font-sans text-[11px] font-semibold opacity-60 sm:inline">
+      ↵
+    </kbd>
   );
 }
