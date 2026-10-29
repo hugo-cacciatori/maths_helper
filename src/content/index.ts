@@ -11,7 +11,9 @@ import { ch5Lessons } from './lessons/ch5';
 import { ch5xLessons } from './lessons/ch5x';
 import { ch6Lessons } from './lessons/ch6';
 import { ch7Lessons } from './lessons/ch7';
+import { ch7xLessons } from './lessons/ch7x';
 import { ch8Lessons } from './lessons/ch8';
+import { ch8xLessons } from './lessons/ch8x';
 
 export const chapters: Chapter[] = [
   {
@@ -54,13 +56,13 @@ export const chapters: Chapter[] = [
     id: 'best-step-first',
     title: 'Best step first',
     blurb: 'Take the most promising move each time — and know when that is safe.',
-    lessons: ch7Lessons,
+    lessons: [...ch7Lessons, ...ch7xLessons],
   },
   {
     id: 'puzzle-box',
     title: 'Puzzle box',
     blurb: 'Brain-teasers that mix several ideas.',
-    lessons: ch8Lessons,
+    lessons: [...ch8Lessons, ...ch8xLessons],
   },
 ];
 
