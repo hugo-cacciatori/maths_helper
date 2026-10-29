@@ -49,11 +49,20 @@ pub fn run() {
         })
         .on_page_load(move |webview, payload| {
             if smoke && matches!(payload.event(), PageLoadEvent::Finished) {
+                // Besides the UI, check that style attributes are honoured: the maths renderer positions
+                // superscripts with them, and a CSP that drops them breaks every formula.
                 let _ = webview.eval(
-                    "setTimeout(() => window.__TAURI_INTERNALS__.invoke('smoke_report', {
-                        ok: document.body.innerText.includes('See the maths behind algorithms'),
-                        lessons: document.querySelectorAll('a[href^=\"#/lesson/\"]').length,
-                    }), 1500)",
+                    "setTimeout(() => {
+                        const probe = document.createElement('div');
+                        probe.innerHTML = '<span style=\"display:none\"></span>';
+                        document.body.append(probe);
+                        const styled = getComputedStyle(probe.firstChild).display === 'none';
+                        probe.remove();
+                        window.__TAURI_INTERNALS__.invoke('smoke_report', {
+                            ok: styled && document.body.innerText.includes('See the maths behind algorithms'),
+                            lessons: document.querySelectorAll('a[href^=\"#/lesson/\"]').length,
+                        });
+                    }, 1500)",
                 );
             }
         })
