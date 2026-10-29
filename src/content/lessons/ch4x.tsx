@@ -1,9 +1,21 @@
-import type { Lesson } from '../../lib/types';
+import type { Lesson, QuestionStep } from '../../lib/types';
 import { NutsBolts, QuickSelect, TreeRebuilder } from '../../widgets/split-extra';
 
 export const REBUILD_IN = ['9', '3', '1', '0', '4', '2', '7', '6', '8', '5'];
 export const REBUILD_POST = ['9', '1', '4', '0', '3', '6', '7', '5', '8', '2'];
 export const SELECT_VALUES = [9, 2, 7, 4, 12, 5, 8, 1, 10];
+
+const ordinal = (k: number) => `${k}${['st', 'nd', 'rd'][k - 1] ?? 'th'}`;
+
+export const kthQ = (values: number[], k: number): QuestionStep => {
+  const down = [...values].sort((a, b) => b - a);
+  return {
+    kind: 'number',
+    body: `What is the ${ordinal(k)} largest of **${values.join(', ')}**?`,
+    answer: down[k - 1],
+    explain: `Counting from the top: ${down.slice(0, k - 1).join(', ')}, **${down[k - 1]}**. Partitioning finds it without sorting the rest.`,
+  };
+};
 
 const nutsBolts: Lesson = {
   id: 'c4l6',
@@ -91,12 +103,7 @@ const kthLargest: Lesson = {
       widget: ({ onSolved }) => <QuickSelect values={SELECT_VALUES} onSolved={onSolved} />,
       success: 'Every partition throws away the side that cannot contain the answer.',
     },
-    {
-      kind: 'number',
-      body: 'What is the 3rd largest of **9, 2, 7, 4, 12, 5, 8, 1, 10**?',
-      answer: 9,
-      explain: 'Sorted: 1 2 4 5 7 8 9 10 12. Counting from the top: 12, 10, **9**.',
-    },
+    { kind: 'generated', make: (r) => kthQ(r.shuffle([...Array(40).keys()].map((i) => i + 1)).slice(0, 9), r.int(2, 5)) },
     {
       kind: 'choice',
       body: 'With pivots that roughly halve the range, the work is about $n + n/2 + n/4 + \\dots$ What is the average cost?',

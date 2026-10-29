@@ -1,7 +1,42 @@
-import type { Lesson } from '../../lib/types';
-import { AvlBuilder, AvlCheck, HeapViz, WineDecoder } from '../../widgets/reshape';
+import type { Lesson, QuestionStep } from '../../lib/types';
+import { AvlBuilder, AvlCheck, avlFrames, heapFrames, HeapViz, WineDecoder } from '../../widgets/reshape';
 
 const HEAP_INPUT = [1, 8, 6, 5, 3, 7, 4];
+
+/* ---------- practice questions with fresh numbers ---------- */
+
+export const heapQ = (keys: number[]): QuestionStep => {
+  const heap = heapFrames(keys, 'bottom-up').at(-1)!.arr.map(String);
+  return {
+    kind: 'sequence',
+    title: 'Practice',
+    body: `Build a heap **bottom-up** from the array **${keys.join(', ')}**. Give the resulting array, left to right.`,
+    tokens: keys.map(String),
+    answer: heap,
+    hint: 'Sift down the parental nodes at positions 3, 2, then 1 (the root), each time swapping with the larger child.',
+    explain: `Sifting down positions 3, 2 and 1 gives **${heap.join(' ')}**: every parent is at least as big as its children.`,
+  };
+};
+
+const ROTATION = /\((L|R|LR|RL)\) at (\S+)\.$/;
+
+export const avlRotationsQ = (keys: number[]): QuestionStep => {
+  const frames = avlFrames(keys);
+  const rotations = frames.flatMap((f) => {
+    const m = f.msg.match(ROTATION);
+    return m ? [`${m[1]} at ${m[2]}`] : [];
+  });
+  return {
+    kind: 'number',
+    title: 'Practice',
+    body: `Insert **${keys.join(', ')}** one at a time into an empty AVL tree. How many rotations are needed (a double rotation counts as one)?`,
+    answer: frames.at(-1)!.rotations,
+    hint: 'After each insertion, walk back up from the new leaf and look for a balance factor of ±2.',
+    explain: rotations.length
+      ? `${rotations.length === 1 ? 'One rotation' : `${rotations.length} rotations`}: ${rotations.join(', ')}.`
+      : 'None: no node ever gets a balance factor of ±2.',
+  };
+};
 
 const heaps: Lesson = {
   id: 'c5l1',
@@ -68,6 +103,7 @@ A **heap** is a complete binary tree (filled level by level, left to right) wher
       answer: 0,
       explain: 'Max is at the root; deleting it or inserting a key moves one element along a root-to-leaf path. (Unsorted array: $\\Theta(n)$, $\\Theta(n)$, $\\Theta(1)$; sorted array: $\\Theta(1)$, $\\Theta(1)$, $\\Theta(n)$.)',
     },
+    { kind: 'generated', make: (r) => heapQ(r.shuffle([...Array(30).keys()].map((i) => i + 1)).slice(0, 7)) },
   ],
 };
 
@@ -126,6 +162,7 @@ One rotation always restores the balance of the whole tree.`,
       answer: ['L', 'L', 'RL', 'RL'],
       explain: 'L, L, RL, RL.',
     },
+    { kind: 'generated', make: (r) => avlRotationsQ(r.shuffle([...Array(40).keys()].map((i) => i + 1)).slice(0, 6)) },
   ],
 };
 

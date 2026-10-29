@@ -1,5 +1,16 @@
-import type { Lesson } from '../../lib/types';
+import type { Lesson, QuestionStep } from '../../lib/types';
 import { DropTest } from '../../widgets/puzzles-extra';
+
+export const twoDevicesQ = (n: number): QuestionStep => {
+  let d = 1;
+  while ((d * (d + 1)) / 2 < n) d++;
+  return {
+    kind: 'number',
+    body: `With $d$ drops and two devices, shrinking steps cover $d + (d-1) + \\dots + 1 = \\frac{d(d+1)}{2}$ floors. What is the smallest worst-case number of drops for **${n}** floors?`,
+    answer: d,
+    explain: `$\\frac{${d - 1} \\cdot ${d}}{2} = ${((d - 1) * d) / 2} < ${n} \\le \\frac{${d} \\cdot ${d + 1}}{2} = ${(d * (d + 1)) / 2}$, so ${d} drops: about $\\sqrt{2n}$.`,
+  };
+};
 
 const dropTest: Lesson = {
   id: 'c8l4',
@@ -33,12 +44,7 @@ Play with one device first, then two.`,
       hint: 'Make the steps shrink: 8, then 7 more, then 6 more… so that a break always leaves the same total number of drops.',
       success: 'The best plan jumps 8, 15, 21, 26, 30, 33, 35, 36: it never needs more than 8 drops.',
     },
-    {
-      kind: 'number',
-      body: 'With $d$ drops and two devices, shrinking steps cover $d + (d-1) + \\dots + 1 = \\frac{d(d+1)}{2}$ floors. What is the smallest worst-case number of drops for **100** floors?',
-      answer: 14,
-      explain: '$\\frac{13 \\cdot 14}{2} = 91 < 100 \\le \\frac{14 \\cdot 15}{2} = 105$, so 14 drops: about $\\sqrt{2n}$.',
-    },
+    { kind: 'generated', make: (r) => twoDevicesQ(r.int(20, 500)) },
     {
       kind: 'choice',
       body: 'With **many** devices — at least $\\lceil\\log_2 n\\rceil$ — what is the best strategy?',

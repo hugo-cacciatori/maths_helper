@@ -1,6 +1,43 @@
-import type { Lesson } from '../../lib/types';
+import type { Lesson, QuestionStep } from '../../lib/types';
 import { CodeBlock } from '../../widgets/kit';
 import { ChocolateBar, FlagSort, MergeSortTree, PowerByHalves, QuickSortViz, TraversalClicker } from '../../widgets/split';
+
+/* ---------- practice questions with fresh numbers ---------- */
+
+export const powerMultsQ = (n: number): QuestionStep => {
+  const chain: number[] = [];
+  for (let e = n; e >= 1; e = Math.floor(e / 2)) chain.push(e);
+  const odd = chain.filter((e) => e > 1 && e % 2 === 1);
+  const total = chain.length - 1 + odd.length;
+  return {
+    kind: 'number',
+    body: `How many multiplications does the halving method use for $a^{${n}}$?`,
+    answer: total,
+    hint: 'Follow the exponent down: halve it (rounding down) until you reach 1. Each step is one squaring, plus one more multiplication by $a$ when the exponent is odd.',
+    explain: `$${chain.join(' \\to ')}$: ${chain.length - 1} squarings${odd.length ? `, plus one multiplication by $a$ for each odd exponent above 1 (${odd.join(', ')})` : ''}. Total **${total}**, against ${n - 1} for the direct method.`,
+  };
+};
+
+const pw = (d: number) => (d === 0 ? '1' : d === 1 ? 'n' : `n^{${d}}`);
+
+export const masterQ = (a: number, b: number, d: number): QuestionStep => {
+  const bd = b ** d;
+  const e = Math.log(a) / Math.log(b);
+  return {
+    kind: 'choice',
+    title: 'Practice',
+    body: `Solve $T(n) = ${a === 1 ? '' : a}T(n/${b}) + ${pw(d)}$.`,
+    options: [`$\\Theta(${pw(d)})$`, `$\\Theta(${d === 0 ? '' : pw(d) + ' '}\\log n)$`, `$\\Theta(n^{\\log_{${b}} ${a}})$`],
+    answer: a < bd ? 0 : a === bd ? 1 : 2,
+    explain: `$a = ${a}$, $b = ${b}$, $d = ${d}$, so $b^d = ${bd}$. ${
+      a < bd
+        ? `$${a} < ${bd}$: the combine step dominates, $\\Theta(${pw(d)})$.`
+        : a === bd
+          ? `$${a} = ${bd}$: every level costs the same and there are $\\log_${b} n$ levels.`
+          : `$${a} > ${bd}$: the leaves dominate, $\\Theta(n^{\\log_{${b}} ${a}})$ with $\\log_{${b}} ${a} ${Number.isInteger(e) ? '=' : '\\approx'} ${Number.isInteger(e) ? e : e.toFixed(2)}$.`
+    }`,
+  };
+};
 
 const mergesort: Lesson = {
   id: 'c4l1',
@@ -94,12 +131,7 @@ $$a^n = \\left(a^{\\lfloor n/2 \\rfloor}\\right)^2 \\text{ if } n \\text{ is eve
 The crucial point: $a^{\\lfloor n/2 \\rfloor}$ is computed **once** and squared. Slide $n$.`,
       widget: () => <PowerByHalves />,
     },
-    {
-      kind: 'number',
-      body: 'How many multiplications does the halving method use for $a^{16}$?',
-      answer: 4,
-      explain: '$a^{16} = (a^8)^2$, $a^8 = (a^4)^2$, $a^4 = (a^2)^2$, $a^2 = a\\cdot a$: four squarings, against 15 for the direct method. $M(n) = M(n/2) + 1 \\Rightarrow M(n) = \\log_2 n$.',
-    },
+    { kind: 'generated', make: (r) => powerMultsQ(r.int(10, 200)) },
     {
       kind: 'choice',
       title: 'Max and min',
@@ -138,6 +170,7 @@ The crucial point: $a^{\\lfloor n/2 \\rfloor}$ is computed **once** and squared.
       answer: 1,
       explain: '$a = 1 = 3^0 = b^d$: $\\Theta(n^0 \\log n) = \\Theta(\\log n)$ — one step per division by 3.',
     },
+    { kind: 'generated', make: (r) => masterQ(r.int(1, 9), r.int(2, 4), r.int(0, 3)) },
   ],
 };
 

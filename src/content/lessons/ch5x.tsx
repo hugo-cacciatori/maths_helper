@@ -1,6 +1,40 @@
-import type { Lesson } from '../../lib/types';
-import { ClosestPair, HeapMin, PlainBstBuilder, ProductBars, SortOrNot, ThinBalancedTree } from '../../widgets/reshape-extra';
+import type { Lesson, QuestionStep } from '../../lib/types';
+import { ClosestPair, closestPair, HeapMin, minAvlNodes, PlainBstBuilder, ProductBars, SortOrNot, ThinBalancedTree } from '../../widgets/reshape-extra';
 import { AvlBuilder } from '../../widgets/reshape';
+
+/* ---------- practice questions with fresh numbers ---------- */
+
+export const closestGapQ = (values: number[]): QuestionStep => {
+  const { pair, gap } = closestPair(values);
+  return {
+    kind: 'number',
+    title: 'Practice',
+    body: `What is the smallest difference between two of **${values.join(', ')}**?`,
+    answer: gap,
+    hint: 'Sort them first: the closest two are neighbours.',
+    explain: `Sorted: ${[...values].sort((a, b) => a - b).join(', ')}. The closest neighbours are ${pair[0]} and ${pair[1]}: a gap of **${gap}**.`,
+  };
+};
+
+export const minAvlQ = (h: number): QuestionStep => {
+  const N = Array.from({ length: h + 1 }, (_, k) => minAvlNodes(k));
+  return {
+    kind: 'number',
+    body: `What is the smallest number of nodes in a balanced tree of height **${h}**?`,
+    answer: N[h],
+    explain: `${N.map((v, k) => `$N(${k}) = ${v}$`).join(', ')}. These numbers grow like Fibonacci numbers — exponentially — so the height of a balanced tree is $O(\\log n)$.`,
+  };
+};
+
+export const productQ = (n: number): QuestionStep => {
+  const a = Math.floor(n / 2);
+  return {
+    kind: 'number',
+    body: `What is the largest product of two positive integers whose sum is **${n}**?`,
+    answer: a * (n - a),
+    explain: `$a(${n} - a)$ is a downward parabola, highest in the middle: $${a} \\times ${n - a} = ${a * (n - a)}$. In general $\\lfloor n/2\\rfloor \\cdot \\lceil n/2 \\rceil$.`,
+  };
+};
 
 export const ZIGZAG_KEYS = ['A', 'Z', 'B', 'Y', 'C', 'X', 'D', 'W', 'E', 'V', 'F'];
 
@@ -53,6 +87,7 @@ Move $k$ to see where the lines cross.`,
       tolerance: 1,
       explain: '$k > \\frac{10^6 \\times 19.93}{5\\cdot10^5 - 19.93} \\approx 39.9$: about **40** searches. The break-even grows only like $2\\log_2 n$.',
     },
+    { kind: 'generated', make: (r) => closestGapQ(r.shuffle([...Array(99).keys()].map((i) => i + 1)).slice(0, 8)) },
   ],
 };
 
@@ -68,12 +103,7 @@ const treeHeights: Lesson = {
 $$N(h) = N(h-1) + N(h-2) + 1,\\quad N(0) = 1,\\ N(1) = 2.$$`,
       widget: () => <ThinBalancedTree />,
     },
-    {
-      kind: 'number',
-      body: 'What is the smallest number of nodes in a balanced tree of height **4**?',
-      answer: 12,
-      explain: '$N(2) = 4$, $N(3) = 7$, $N(4) = 7 + 4 + 1 = 12$. These numbers grow like Fibonacci numbers — exponentially — so the height of a balanced tree is $O(\\log n)$.',
-    },
+    { kind: 'generated', make: (r) => minAvlQ(r.int(2, 9)) },
     {
       kind: 'task',
       title: 'A zigzag of keys',
@@ -126,12 +156,7 @@ const heapTricks: Lesson = {
       body: 'Given a positive integer $n$, which two positive integers with sum $n$ have the **largest product**? Write them as $a$ and $n - a$ and look at the shape of $a(n - a)$.',
       widget: () => <ProductBars />,
     },
-    {
-      kind: 'number',
-      body: 'What is the largest product of two positive integers whose sum is **25**?',
-      answer: 156,
-      explain: '$a(25 - a)$ is a downward parabola, highest in the middle: $12 \\times 13 = 156$. In general $\\lfloor n/2\\rfloor \\cdot \\lceil n/2 \\rceil$.',
-    },
+    { kind: 'generated', make: (r) => productQ(r.int(10, 199)) },
     {
       kind: 'choice',
       body: 'How long does it take to compute the answer for any $n$?',

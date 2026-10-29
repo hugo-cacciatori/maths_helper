@@ -6,6 +6,18 @@ import { allLessons } from '../src/content';
 import { addConstQ, compareQ, doublingSumQ, loopD, oddSumQ, quadrupleQ, rangeCompsQ, symmetricCompsQ, triangleQ, twoCallsQ } from '../src/content/lessons/ch1';
 import { cubeMultsQ, cubesSpec } from '../src/content/lessons/ch1x';
 import { bsMaxQ, josephusQ, nimMoveQ } from '../src/content/lessons/ch3';
+import { masterQ, powerMultsQ } from '../src/content/lessons/ch4';
+import { kthQ } from '../src/content/lessons/ch4x';
+import { avlRotationsQ, heapQ } from '../src/content/lessons/ch5';
+import { closestGapQ, minAvlQ, productQ } from '../src/content/lessons/ch5x';
+import { routeQ, smallGraph } from '../src/content/lessons/ch7';
+import { maxRunQ, pilesQ, weighingsQ } from '../src/content/lessons/ch8';
+import { twoDevicesQ } from '../src/content/lessons/ch8x';
+import type { TNode } from '../src/widgets/kit';
+import { worstCaseDrops } from '../src/widgets/puzzles-extra';
+import { avlFrames, toTNode } from '../src/widgets/reshape';
+import { traverse } from '../src/widgets/split';
+import { quickSelectFrames } from '../src/widgets/split-extra';
 import { choiceOf, rng } from '../src/lib/random';
 import type { QuestionStep } from '../src/lib/types';
 import { chainFrames } from '../src/widgets/cost-extra';
@@ -86,6 +98,97 @@ describe('generated answers match the reference code', () => {
         expect(take).toBeLessThanOrEqual(m);
         expect((n - take - 1) % (m + 1)).toBe(0); // leaves a losing position
       }
+  });
+
+  it('split in two', () => {
+    const mults = (n: number): number => (n === 1 ? 0 : mults(Math.floor(n / 2)) + 1 + (n % 2));
+    for (const n of range(10, 200)) expect(num(powerMultsQ(n))).toBe(mults(n));
+    for (const a of range(1, 9))
+      for (const b of range(2, 4))
+        for (const d of range(0, 3)) {
+          const q = masterQ(a, b, d);
+          const expected = Math.log(a) < d * Math.log(b) - 1e-9 ? 0 : Math.abs(Math.log(a) - d * Math.log(b)) < 1e-9 ? 1 : 2;
+          expect(q.kind === 'choice' && q.answer, `${a} ${b} ${d}`).toBe(expected);
+        }
+    const r = rng(3);
+    for (let t = 0; t < 200; t++) {
+      const vals = r.shuffle(range(1, 40)).slice(0, 9);
+      const k = r.int(2, 5);
+      const found = quickSelectFrames(vals, k).at(-1)!;
+      expect(num(kthQ(vals, k))).toBe(found.arr[found.found!]);
+    }
+  });
+
+  it('change the shape', () => {
+    const r = rng(5);
+    for (let t = 0; t < 200; t++) {
+      const keys = r.shuffle(range(1, 30)).slice(0, 7);
+      const q = heapQ(keys);
+      const heap = q.kind === 'sequence' ? q.answer.map(Number) : [];
+      expect([...heap].sort((x, y) => x - y)).toEqual([...keys].sort((x, y) => x - y));
+      heap.forEach((v, i) => i > 0 && expect(heap[Math.floor((i - 1) / 2)]).toBeGreaterThanOrEqual(v));
+
+      const avlKeys = r.shuffle(range(1, 40)).slice(0, 6);
+      expect(num(avlRotationsQ(avlKeys))).toBeGreaterThanOrEqual(0);
+      const root = toTNode(avlFrames(avlKeys).at(-1)!.root);
+      const height = (n: TNode | null | undefined): number => (n ? 1 + Math.max(height(n.left), height(n.right)) : 0);
+      const check = (n: TNode | null | undefined): void => {
+        if (!n) return;
+        expect(Math.abs(height(n.left) - height(n.right))).toBeLessThanOrEqual(1);
+        check(n.left);
+        check(n.right);
+      };
+      check(root);
+      expect(traverse(root, 'in').map(Number)).toEqual([...avlKeys].sort((x, y) => x - y));
+
+      const vals = r.shuffle(range(1, 99)).slice(0, 8);
+      const gaps = vals.flatMap((x, i) => vals.slice(i + 1).map((y) => Math.abs(x - y)));
+      expect(num(closestGapQ(vals))).toBe(Math.min(...gaps));
+    }
+    const N = (h: number): number => (h === 0 ? 1 : h === 1 ? 2 : N(h - 1) + N(h - 2) + 1);
+    for (const h of range(2, 9)) expect(num(minAvlQ(h))).toBe(N(h));
+    for (const n of range(10, 199)) expect(num(productQ(n))).toBe(Math.max(...range(1, n - 1).map((a) => a * (n - a))));
+  });
+
+  it('best step first', () => {
+    // Every simple path from a, by depth-first enumeration.
+    const best = (w: number[], target: string) => {
+      const edges = smallGraph.edges.map((e, i) => ({ ...e, w: w[i] }));
+      let min = Infinity;
+      const walk = (at: string, seen: Set<string>, len: number) => {
+        if (at === target) min = Math.min(min, len);
+        for (const e of edges) {
+          const next = e.u === at ? e.v : e.v === at ? e.u : null;
+          if (next && !seen.has(next)) walk(next, new Set([...seen, next]), len + e.w);
+        }
+      };
+      walk('a', new Set(['a']), 0);
+      return min;
+    };
+    const r = rng(11);
+    for (let t = 0; t < 300; t++) {
+      const w = smallGraph.edges.map(() => r.int(1, 9));
+      const target = r.pick(['b', 'c', 'd', 'e']);
+      expect(num(routeQ(w, target))).toBe(best(w, target));
+    }
+  });
+
+  it('puzzle box', () => {
+    const r = rng(13);
+    for (let t = 0; t < 300; t++) {
+      const A = Array.from({ length: 8 }, () => r.int(-6, 6));
+      if (!A.some((x) => x > 0)) continue;
+      const sums = A.flatMap((_, i) => range(i, 7).map((j) => sum(A.slice(i, j + 1))));
+      expect(num(maxRunQ(A))).toBe(Math.max(...sums));
+    }
+    for (const p of range(1, 10)) {
+      const q = pilesQ(p);
+      const weight = sum(range(1, 10).map((i) => i * (i === p ? 11 : 10)));
+      expect(q.body).toContain(`**${weight} g**`);
+      expect(num(q)).toBe(p);
+    }
+    for (const n of range(4, 800)) expect(num(weighingsQ(n))).toBe(Math.ceil(Math.log(n) / Math.log(3) - 1e-9));
+    for (const n of range(20, 500)) expect(num(twoDevicesQ(n))).toBe(worstCaseDrops(n, 2));
   });
 
   it('every lesson keeps its generated steps varied', () => {

@@ -1,5 +1,45 @@
-import type { Lesson } from '../../lib/types';
-import { BalanceScale, MaxSubarray, TournamentViz } from '../../widgets/puzzles';
+import type { Lesson, QuestionStep } from '../../lib/types';
+import { BalanceScale, kadaneFrames, MaxSubarray, TournamentViz } from '../../widgets/puzzles';
+
+/* ---------- practice questions with fresh numbers ---------- */
+
+const minus = (x: number) => String(x).replace('-', '−');
+
+export const maxRunQ = (A: number[]): QuestionStep => {
+  const last = kadaneFrames(A).at(-1)!;
+  const [i, j] = last.bestRange!;
+  return {
+    kind: 'number',
+    body: `What is the maximum subarray sum of **${A.map(minus).join(', ')}**?`,
+    answer: last.best,
+    hint: 'Keep a running sum; reset it to 0 whenever it goes negative, and remember the best value seen.',
+    explain: `$${A.slice(i, j + 1)
+      .map((x, k) => (k === 0 ? String(x) : x < 0 ? `- ${-x}` : `+ ${x}`))
+      .join(' ')} = ${last.best}$.`,
+  };
+};
+
+export const pilesQ = (fake: number): QuestionStep => ({
+  kind: 'number',
+  title: 'Ten piles, one weighing',
+  body: `You have **10 piles** of coins. One pile is entirely fake: fakes weigh **11 g**, genuine coins **10 g**. A scale gives the exact weight.
+
+Take **1** coin from pile 1, **2** from pile 2, …, **10** from pile 10, and weigh them all together, **once**. The scale shows **${550 + fake} g**. Which pile is fake?`,
+  answer: fake,
+  hint: 'If every coin were genuine, how much would $1 + 2 + \\dots + 10$ coins weigh?',
+  explain: `55 genuine coins would weigh 550 g. Each fake coin adds 1 g, and pile $i$ contributed $i$ coins: $${550 + fake} - 550 = ${fake}$ → pile ${fake}. One weighing, instead of up to $n - 1$ with the direct method.`,
+});
+
+export const weighingsQ = (n: number): QuestionStep => {
+  let k = 0;
+  while (3 ** k < n) k++;
+  return {
+    kind: 'number',
+    body: `With 3 outcomes per weighing, $k$ weighings can distinguish at most $3^k$ cases. What is the minimum number of weighings for **${n}** coins (one lighter)?`,
+    answer: k,
+    explain: `${k > 0 ? `$3^{${k - 1}} = ${3 ** (k - 1)} < ${n} \\le 3^{${k}} = ${3 ** k}$` : `$${n} \\le 1$`}: **${k}** weighings, splitting the suspects into three groups as equal as possible each time. In general $\\lceil\\log_3 n\\rceil$.`,
+  };
+};
 
 const tournamentLesson: Lesson = {
   id: 'c8l1',
@@ -64,10 +104,13 @@ The direct method tries all $\\frac{n(n+1)}{2}$ pairs $(i, j)$ — $\\Theta(n^2)
       success: 'The dashed box is the best run found so far.',
     },
     {
-      kind: 'number',
-      body: 'What is the maximum subarray sum of **2, −3, 4, −1, −2, 1, 5, −3**?',
-      answer: 7,
-      explain: '$4 - 1 - 2 + 1 + 5 = 7$.',
+      kind: 'generated',
+      make: (r) => {
+        let A: number[];
+        do A = Array.from({ length: 8 }, () => r.int(-6, 6));
+        while (!A.some((x) => x > 0));
+        return maxRunQ(A);
+      },
     },
     {
       kind: 'choice',
@@ -84,16 +127,7 @@ const coins: Lesson = {
   title: 'Spot the fake',
   summary: 'You used weighings as comparisons and found the fakes with the minimum number of them.',
   steps: [
-    {
-      kind: 'number',
-      title: 'Ten piles, one weighing',
-      body: `You have **10 piles** of coins. One pile is entirely fake: fakes weigh **11 g**, genuine coins **10 g**. A scale gives the exact weight.
-
-Take **1** coin from pile 1, **2** from pile 2, …, **10** from pile 10, and weigh them all together, **once**. The scale shows **553 g**. Which pile is fake?`,
-      answer: 3,
-      hint: 'If every coin were genuine, how much would $1 + 2 + \\dots + 10$ coins weigh?',
-      explain: '55 genuine coins would weigh 550 g. Each fake coin adds 1 g, and pile $i$ contributed $i$ coins: $553 - 550 = 3$ → pile 3. One weighing, instead of up to $n - 1$ with the direct method.',
-    },
+    { kind: 'generated', make: (r) => pilesQ(r.int(1, 10)) },
     {
       kind: 'task',
       title: 'Eight coins, two weighings',
@@ -102,12 +136,7 @@ Take **1** coin from pile 1, **2** from pile 2, …, **10** from pile 10, and we
       hint: 'Don’t split 4 vs 4. Each weighing has **three** outcomes: left lighter, right lighter, balanced.',
       success: 'Weigh 3 vs 3. If balanced, the fake is among the 2 left out: weigh them against each other. Otherwise, take the lighter three and weigh 1 vs 1.',
     },
-    {
-      kind: 'number',
-      body: 'With 3 outcomes per weighing, $k$ weighings can distinguish at most $3^k$ cases. What is the minimum number of weighings for **27** coins (one lighter)?',
-      answer: 3,
-      explain: '$3^3 = 27$: split into three groups of 9 each time. In general $\\lceil\\log_3 n\\rceil$ — each weighing divides the suspects by 3.',
-    },
+    { kind: 'generated', make: (r) => weighingsQ(r.int(4, 800)) },
     {
       kind: 'choice',
       body: 'Among $n > 2$ coins one is fake, but you don’t know if it is lighter or heavier. You only want to know **which**. A constant number of weighings is enough. What is a good first step?',

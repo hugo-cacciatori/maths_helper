@@ -1,5 +1,5 @@
-import type { Lesson } from '../../lib/types';
-import { DijkstraLab, type WGraph } from '../../widgets/routes';
+import type { Lesson, QuestionStep } from '../../lib/types';
+import { dijkstra, DijkstraLab, type WGraph } from '../../widgets/routes';
 import { GraphView } from '../../widgets/kit';
 
 export const smallGraph: WGraph = {
@@ -57,6 +57,26 @@ const trapGraph = {
     { u: 's', v: 'y', w: 2, directed: true },
     { u: 'y', v: 't', w: 2, directed: true },
   ],
+};
+
+/* ---------- practice questions with fresh numbers ---------- */
+
+/** The small graph again, with new travel times; asks for the distance from a to `target`. */
+export const routeQ = (weights: number[], target: string): QuestionStep => {
+  const g: WGraph = { nodes: smallGraph.nodes, edges: smallGraph.edges.map((e, i) => ({ ...e, w: weights[i] })) };
+  const { dist, prev } = dijkstra(g, 'a');
+  const path = [target];
+  while (prev[path[0]]) path.unshift(prev[path[0]]!);
+  const legs = path.slice(1).map((v, i) => g.edges.find((e) => (e.u === path[i] && e.v === v) || (e.v === path[i] && e.u === v))!.w);
+  return {
+    kind: 'number',
+    title: 'Practice',
+    body: `Same roads, new travel times. What is the length of the shortest path from $a$ to $${target}$?`,
+    widget: () => <GraphView nodes={g.nodes} edges={g.edges} width={420} height={210} fill={(id) => (id === 'a' || id === target ? 'active' : 'idle')} />,
+    answer: dist[target],
+    hint: 'Run Dijkstra from $a$: always finalise the closest unfinished vertex, then update its neighbours.',
+    explain: `$${path.join(' \\to ')}$: $${legs.join(' + ')} = ${dist[target]}$.`,
+  };
 };
 
 const dijkstraLesson: Lesson = {
@@ -121,6 +141,7 @@ const dijkstraLesson: Lesson = {
       answer: 1,
       explain: 'Dijkstra’s correctness relies on paths only getting longer as you extend them, which makes the smallest tentative distance final. For maxima there is no such guarantee — but a topological order handles both minimum and maximum paths on a DAG in $\\Theta(|V| + |E|)$.',
     },
+    { kind: 'generated', make: (r) => routeQ(smallGraph.edges.map(() => r.int(1, 9)), r.pick(['b', 'c', 'd', 'e'])) },
   ],
 };
 
