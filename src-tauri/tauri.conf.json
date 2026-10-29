@@ -1,0 +1,43 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Algo Visual",
+  "version": "0.0.0",
+  "identifier": "io.github.hugocacciatori.algovisual",
+  "build": {
+    "frontendDist": "../dist-web",
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build:web"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Algo Visual",
+        "width": 1200,
+        "height": 840,
+        "minWidth": 380,
+        "minHeight": 560,
+        "resizable": true,
+        "center": true,
+        "label": "main",
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "shortDescription": "Interactive algorithm-analysis lessons",
+    "category": "Education"
+  }
+}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist-web/
+coverage/
+*.log
+src-tauri/target/
+src-tauri/gen/
+
+# private agent docs (versioned in the separate -docs repository)
+AGENTS.md
+CLAUDE.md
+docs/
+.claude/
+.git-docs/
+*.tsbuildinfo
