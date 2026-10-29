@@ -4,7 +4,9 @@ import { ch1xLessons } from './lessons/ch1x';
 import { ch2Lessons } from './lessons/ch2';
 import { ch2xLessons } from './lessons/ch2x';
 import { ch3Lessons } from './lessons/ch3';
+import { ch3xLessons } from './lessons/ch3x';
 import { ch4Lessons } from './lessons/ch4';
+import { ch4xLessons } from './lessons/ch4x';
 import { ch5Lessons } from './lessons/ch5';
 import { ch6Lessons } from './lessons/ch6';
 import { ch7Lessons } from './lessons/ch7';
@@ -27,13 +29,13 @@ export const chapters: Chapter[] = [
     id: 'make-it-smaller',
     title: 'Make it smaller',
     blurb: 'Solve a smaller copy of the problem, then extend the answer.',
-    lessons: ch3Lessons,
+    lessons: [...ch3Lessons, ...ch3xLessons],
   },
   {
     id: 'split-in-two',
     title: 'Split in two',
     blurb: 'Cut the problem into halves, solve each, put the answers together.',
-    lessons: ch4Lessons,
+    lessons: [...ch4Lessons, ...ch4xLessons],
   },
   {
     id: 'change-the-shape',

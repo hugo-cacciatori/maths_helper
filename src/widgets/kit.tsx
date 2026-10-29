@@ -164,6 +164,7 @@ export function ArrayRow({
   showIndex = false,
   indexBase = 0,
   onCellClick,
+  wrap = false,
 }: {
   items: { id: string | number; label: ReactNode }[];
   tone?: (i: number) => CellTone;
@@ -172,10 +173,12 @@ export function ArrayRow({
   showIndex?: boolean;
   indexBase?: number;
   onCellClick?: (i: number) => void;
+  /** Wrap onto several lines instead of scrolling sideways (for clickable rows on narrow screens). */
+  wrap?: boolean;
 }) {
   return (
-    <div className="overflow-x-auto pb-1">
-      <div className="mx-auto flex w-max gap-1.5 px-1">
+    <div className={wrap ? 'pb-1' : 'overflow-x-auto pb-1'}>
+      <div className={wrap ? 'flex flex-wrap justify-center gap-1.5 px-1' : 'mx-auto flex w-max gap-1.5 px-1'}>
         {items.map((it, i) => {
           const t = tone?.(i) ?? 'idle';
           const strong = t !== 'idle' && t !== 'dim';
