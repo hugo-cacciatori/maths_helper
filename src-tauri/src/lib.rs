@@ -5,9 +5,25 @@ use tauri::{Manager, webview::PageLoadEvent};
 /// UI rendered, and the process exits with 0 (ok), 1 (UI missing) or 2 (timeout).
 const SMOKE_ENV: &str = "ALGO_VISUAL_SMOKE";
 
+/// Smoke results go to stdout on desktop and to logcat (tag `AlgoVisual`) on Android, where stdout is discarded.
+fn smoke_log(line: &str) {
+    #[cfg(target_os = "android")]
+    {
+        #[link(name = "log")]
+        unsafe extern "C" {
+            fn __android_log_write(prio: i32, tag: *const std::ffi::c_char, text: *const std::ffi::c_char) -> i32;
+        }
+        let text = std::ffi::CString::new(line).unwrap_or_default();
+        // 4 = ANDROID_LOG_INFO
+        unsafe { __android_log_write(4, c"AlgoVisual".as_ptr(), text.as_ptr()) };
+    }
+    #[cfg(not(target_os = "android"))]
+    println!("{line}");
+}
+
 #[tauri::command]
 fn smoke_report(app: tauri::AppHandle, ok: bool, lessons: u32) {
-    println!("smoke: ok={ok} lessons={lessons}");
+    smoke_log(&format!("smoke: ok={ok} lessons={lessons}"));
     app.exit(if ok { 0 } else { 1 });
 }
 
@@ -22,7 +38,7 @@ pub fn run() {
                 let handle = app.handle().clone();
                 std::thread::spawn(move || {
                     std::thread::sleep(Duration::from_secs(30));
-                    eprintln!("smoke: timed out");
+                    smoke_log("smoke: timed out");
                     handle.exit(2);
                 });
             } else {

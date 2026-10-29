@@ -4,7 +4,7 @@ dist-web/
 coverage/
 *.log
 src-tauri/target/
-src-tauri/gen/
+src-tauri/gen/schemas/
 
 # private agent docs (versioned in the separate -docs repository)
 AGENTS.md
