@@ -1,6 +1,8 @@
 import type { Chapter, Lesson } from '../lib/types';
 import { ch1Lessons } from './lessons/ch1';
+import { ch1xLessons } from './lessons/ch1x';
 import { ch2Lessons } from './lessons/ch2';
+import { ch2xLessons } from './lessons/ch2x';
 import { ch3Lessons } from './lessons/ch3';
 import { ch4Lessons } from './lessons/ch4';
 import { ch5Lessons } from './lessons/ch5';
@@ -13,13 +15,13 @@ export const chapters: Chapter[] = [
     id: 'cost',
     title: 'Measuring cost',
     blurb: 'How fast functions grow, counting steps, sums and self-calling functions.',
-    lessons: ch1Lessons,
+    lessons: [...ch1Lessons, ...ch1xLessons],
   },
   {
     id: 'try-everything',
     title: 'Try everything',
     blurb: 'Solve it the direct way, then search every possibility in order.',
-    lessons: ch2Lessons,
+    lessons: [...ch2Lessons, ...ch2xLessons],
   },
   {
     id: 'make-it-smaller',
