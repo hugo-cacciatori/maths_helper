@@ -43,6 +43,8 @@ describe('content', () => {
             </MemoryRouter>,
           );
           expect(container.textContent?.length).toBeGreaterThan(10);
+          // Maths must be typeset, never shown as raw source.
+          expect(container.textContent, `raw $$ in step ${i}`).not.toContain('$$');
           unmount();
         });
       });

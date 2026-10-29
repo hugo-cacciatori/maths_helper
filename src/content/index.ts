@@ -8,6 +8,7 @@ import { ch3xLessons } from './lessons/ch3x';
 import { ch4Lessons } from './lessons/ch4';
 import { ch4xLessons } from './lessons/ch4x';
 import { ch5Lessons } from './lessons/ch5';
+import { ch5xLessons } from './lessons/ch5x';
 import { ch6Lessons } from './lessons/ch6';
 import { ch7Lessons } from './lessons/ch7';
 import { ch8Lessons } from './lessons/ch8';
@@ -41,7 +42,7 @@ export const chapters: Chapter[] = [
     id: 'change-the-shape',
     title: 'Change the shape',
     blurb: 'Reorganise the data first, then the problem becomes easy.',
-    lessons: ch5Lessons,
+    lessons: [...ch5Lessons, ...ch5xLessons],
   },
   {
     id: 'memory-for-speed',

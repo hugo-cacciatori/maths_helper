@@ -36,7 +36,12 @@ function inline(text: string): ReactNode[] {
 
 /** Mini-markdown renderer: blank lines split paragraphs, `- ` starts a list item, $$…$$ is display maths. */
 export function Prose({ text, className = '' }: { text: string; className?: string }) {
-  const blocks = text.trim().split(/\n\s*\n/);
+  // Display maths ($$…$$) always gets its own block, even when written mid-paragraph.
+  const blocks = text
+    .trim()
+    .split(/(\$\$[\s\S]+?\$\$)/)
+    .flatMap((part) => (part.startsWith('$$') ? [part] : part.split(/\n\s*\n/)))
+    .filter((b) => b.trim() !== '');
   return (
     <div className={`space-y-3 leading-relaxed ${className}`}>
       {blocks.map((b, i) => {
