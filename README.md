@@ -10,6 +10,8 @@ feedback at every step.
    `AlgoVisual-<version>-web.html` in any modern browser — it works offline, on desktop or phone.
 3. Pick a lesson and follow the steps: read, watch or play with the visual, answer, get feedback, continue.
    Your progress is saved on your device and you can resume any lesson where you left off.
+4. Questions you get wrong are collected: use **Review mistakes** on the home screen to practise them again.
+5. Keyboard: press Enter to check an answer or continue, and 1–9 (or A–F) to pick a multiple-choice answer.
 
 ## Building from source
 Requirements: Node.js 22+, and for the desktop app the Rust toolchain.
