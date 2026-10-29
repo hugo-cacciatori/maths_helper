@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StepView } from '../src/components/LessonPlayer';
+import { Prose } from '../src/components/Prose';
 import { allLessons } from '../src/content';
 import { useProgress } from '../src/lib/store';
 import type { Step } from '../src/lib/types';
@@ -55,5 +56,16 @@ describe('review list', () => {
     useProgress.getState().removeMissed('c1l1', 1);
     useProgress.getState().removeMissed('c1l1', 3);
     expect(useProgress.getState().missed).toEqual({});
+  });
+});
+
+describe('inline formatting', () => {
+  it('renders *italic* and leaves maths and bold alone', () => {
+    const { container } = render(<Prose text={'only the *shape* of $2 * 3 * n$ and **bold**'} />);
+    expect(container.querySelector('em')?.textContent).toBe('shape');
+    expect(container.querySelectorAll('em')).toHaveLength(1);
+    expect(container.querySelector('strong')?.textContent).toBe('bold');
+    container.querySelectorAll('.katex').forEach((k) => k.remove());
+    expect(container.textContent).not.toContain('*');
   });
 });

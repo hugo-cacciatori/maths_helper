@@ -10,10 +10,10 @@ export function TeX({ children, block = false }: { children: string; block?: boo
   );
 }
 
-/** Inline formatting: $math$, **bold**, `code`. */
+/** Inline formatting: $math$, **bold**, *italic*, `code`. */
 function inline(text: string): ReactNode[] {
   const out: ReactNode[] = [];
-  const re = /(\$[^$]+\$|\*\*[^*]+\*\*|`[^`]+`)/g;
+  const re = /(\$[^$]+\$|\*\*[^*]+\*\*|\*(?=\S)[^*]+?(?<=\S)\*|`[^`]+`)/g;
   let last = 0;
   let m: RegExpExecArray | null;
   let k = 0;
@@ -22,6 +22,7 @@ function inline(text: string): ReactNode[] {
     const tok = m[0];
     if (tok.startsWith('$')) out.push(<TeX key={k++}>{tok.slice(1, -1)}</TeX>);
     else if (tok.startsWith('**')) out.push(<strong key={k++} className="font-semibold">{tok.slice(2, -2)}</strong>);
+    else if (tok.startsWith('*')) out.push(<em key={k++}>{tok.slice(1, -1)}</em>);
     else
       out.push(
         <code key={k++} className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[0.88em]">
