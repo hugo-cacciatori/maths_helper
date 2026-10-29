@@ -22,7 +22,7 @@ run('npm run check');
 run('npm run build:desktop'); // also runs build:web via beforeBuildCommand
 run('npm run test:desktop'); // windowless: the app never shows its window in smoke mode
 run('npm run build:android');
-run('npm run test:android'); // headless emulator, no window
+run('npm run test:android'); // runs on the USB-connected phone, no window on the computer
 
 const out = join(root, 'dist', `v${version}`);
 // Keep only the latest local release.

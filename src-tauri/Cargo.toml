@@ -7,7 +7,7 @@ rust-version = "1.90"
 
 [lib]
 name = "algo_visual_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+crate-type = ["cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2.7.4", features = [] }
@@ -16,7 +16,6 @@ tauri-build = { version = "2.7.4", features = [] }
 tauri = { version = "2.12.5", features = [] }
 
 [profile.release]
-codegen-units = 1
 lto = true
 opt-level = "s"
 panic = "abort"
