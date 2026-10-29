@@ -106,7 +106,7 @@ Take **1** coin from pile 1, **2** from pile 2, …, **10** from pile 10, and we
       kind: 'number',
       body: 'With 3 outcomes per weighing, $k$ weighings can distinguish at most $3^k$ cases. What is the minimum number of weighings for **27** coins (one lighter)?',
       answer: 3,
-      explain: '$3^3 = 27$: split into three groups of 9 each time. In general $\\lceil\\log_3 n\\rceil$ — decrease by a factor of 3.',
+      explain: '$3^3 = 27$: split into three groups of 9 each time. In general $\\lceil\\log_3 n\\rceil$ — each weighing divides the suspects by 3.',
     },
     {
       kind: 'choice',

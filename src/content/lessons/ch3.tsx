@@ -8,7 +8,7 @@ const binsearch: Lesson = {
   steps: [
     {
       kind: 'read',
-      title: 'Decrease by half',
+      title: 'Halve the search',
       body: `A powerful idea: solve a problem by reducing it to a *smaller instance of itself*. Binary search is the classic: in a **sorted** array, compare the key with the middle element and throw away the half that cannot contain it.
 
 Pick a value and step through the search on this sorted array.`,
@@ -57,7 +57,7 @@ Pick a value and step through the search on this sorted array.`,
 const josephusLesson: Lesson = {
   id: 'c3l2',
   title: 'Last one standing',
-  summary: 'You found the survivor’s position with a decrease-by-half recurrence — and its binary trick.',
+  summary: 'You found the survivor’s position with a halving recurrence — and its binary trick.',
   steps: [
     {
       kind: 'read',
@@ -81,7 +81,7 @@ For example, with $n = 6$, persons 2, 4, 6 go in the first round, then 3 and 1 �
 
 $$J(2k) = 2J(k) - 1 \\qquad J(2k+1) = 2J(k) + 1$$
 
-That is **decrease by half**. Look at the powers of two (in blue).`,
+Each round halves the circle. Look at the powers of two (in blue).`,
       widget: () => <JosephusTable />,
     },
     {

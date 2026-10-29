@@ -132,12 +132,12 @@ One rotation always restores the balance of the whole tree.`,
 const wine: Lesson = {
   id: 'c5l3',
   title: 'One round of tasting',
-  summary: 'You transformed a search problem into binary representation to solve it in one round.',
+  summary: 'You recast a search problem in binary to solve it in one round.',
   steps: [
     {
       kind: 'read',
       title: 'A grim puzzle',
-      body: 'A wicked king learns that one of his **1000** barrels of wine is poisoned. The poison kills in **exactly 30 days**, even in a tiny dose. A feast is planned in **5 weeks**. He is ready to use **10** tasters to find the poisoned barrel. Testing barrels one by one would take years… **Transform** the problem: write barrel numbers in **binary**.',
+      body: 'A wicked king learns that one of his **1000** barrels of wine is poisoned. The poison kills in **exactly 30 days**, even in a tiny dose. A feast is planned in **5 weeks**. He is ready to use **10** tasters to find the poisoned barrel. Testing barrels one by one would take years… Change the point of view: write barrel numbers in **binary**.',
     },
     {
       kind: 'task',
