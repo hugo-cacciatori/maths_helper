@@ -33,7 +33,7 @@ export const useProgress = create<ProgressState>()(
           else delete missed[lessonId];
           return { missed };
         }),
-      setStep: (lessonId, step) => set((s) => ({ stepOf: { ...s.stepOf, [lessonId]: step } })),
+      setStep: (lessonId, step) => set((s) => ({ stepOf: { ...s.stepOf, [lessonId]: Math.max(step, s.stepOf[lessonId] ?? 0) } })),
       complete: (lessonId) =>
         set((s) => ({
           completed: { ...s.completed, [lessonId]: true },

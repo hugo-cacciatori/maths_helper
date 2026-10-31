@@ -2,8 +2,10 @@ import { AnimatePresence, motion } from 'motion/react';
 import { ArrowLeft, Check, Dices, Lightbulb, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useBackHome } from '../lib/nav';
 import { useProgress } from '../lib/store';
 import { freshSeed, rng } from '../lib/random';
+import { useSwipe } from '../lib/swipe';
 import type { Chapter, Lesson, ShownStep, Step } from '../lib/types';
 import { Prose, renderInline } from './Prose';
 
@@ -22,10 +24,16 @@ function shuffled<T>(arr: T[], seed: number) {
 }
 
 export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; chapter: Chapter; nextLesson?: Lesson }) {
-  const { stepOf, setStep, complete, addMissed, removeMissed } = useProgress();
+  const { stepOf, completed, setStep, complete, addMissed, removeMissed } = useProgress();
   const [idx, setIdx] = useState(() => Math.min(stepOf[lesson.id] ?? 0, lesson.steps.length - 1));
   const [finished, setFinished] = useState(false);
+  /** How the current step was reached: 0 = Continue, 1 = forward, -1 = back (swipe, keys or step bar). */
+  const [dir, setDir] = useState(0);
   const navigate = useNavigate();
+  const backHome = useBackHome();
+  const root = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const furthest = completed[lesson.id] ? lesson.steps.length - 1 : (stepOf[lesson.id] ?? 0);
 
   useEffect(() => {
     setIdx(Math.min(useProgress.getState().stepOf[lesson.id] ?? 0, lesson.steps.length - 1));
@@ -33,8 +41,10 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
   }, [lesson.id, lesson.steps.length]);
 
   const step = lesson.steps[idx];
+  const scrollTop = () => window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
 
   const advance = () => {
+    setDir(0);
     if (idx + 1 >= lesson.steps.length) {
       complete(lesson.id);
       setFinished(true);
@@ -42,14 +52,39 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
       setIdx(idx + 1);
       setStep(lesson.id, idx + 1);
     }
-    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+    scrollTop();
   };
 
+  const goTo = (i: number) => {
+    if (finished || i === idx || i < 0 || i > furthest || i >= lesson.steps.length) return;
+    setDir(Math.sign(i - idx));
+    setIdx(i);
+    scrollTop();
+  };
+  // Back to any earlier step; forward only to steps already reached, so nothing unanswered is skipped.
+  const prev = !finished && idx > 0 ? () => goTo(idx - 1) : undefined;
+  const next = !finished && idx < Math.min(furthest, lesson.steps.length - 1) ? () => goTo(idx + 1) : undefined;
+  useSwipe(root, { onLeft: next, onRight: prev, follow: content });
+
+  const arrows = useRef<(e: KeyboardEvent) => void>(() => {});
+  arrows.current = (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || !keyTargetIsFree(e.target)) return;
+    const go = e.key === 'ArrowLeft' ? prev : e.key === 'ArrowRight' ? next : undefined;
+    if (!go) return;
+    e.preventDefault();
+    go();
+  };
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => arrows.current(e);
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, []);
+
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div ref={root} className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
-          <Link to="/" className="btn !px-2" aria-label="Back to lessons">
+          <Link to="/" onClick={backHome} className="btn !px-2" aria-label="Back to lessons">
             <ArrowLeft size={18} />
           </Link>
           <div className="min-w-0 flex-1">
@@ -63,8 +98,9 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
           {lesson.steps.map((_, i) => (
             <button
               key={i}
-              onClick={() => i <= (stepOf[lesson.id] ?? 0) && !finished && setIdx(i)}
+              onClick={() => goTo(i)}
               aria-label={`Step ${i + 1}`}
+              aria-current={!finished && i === idx ? 'step' : undefined}
               className={`h-1.5 flex-1 rounded-full transition-colors ${
                 finished || i < idx ? 'bg-ok' : i === idx ? 'bg-brand' : 'bg-border'
               }`}
@@ -73,8 +109,8 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-40 pt-6">
-        <AnimatePresence mode="wait">
+      <main ref={content} className="mx-auto w-full max-w-4xl flex-1 px-4 pb-40 pt-6">
+        <AnimatePresence mode="wait" custom={dir}>
           {finished ? (
             <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="mx-auto mt-10 max-w-md text-center">
               <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-ok-soft text-ok">
@@ -88,7 +124,7 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
                     Next: {nextLesson.title}
                   </button>
                 )}
-                <Link to="/" className="btn !py-2.5">
+                <Link to="/" onClick={backHome} className="btn !py-2.5">
                   Back to all lessons
                 </Link>
               </div>
@@ -96,9 +132,11 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
           ) : (
             <motion.div
               key={`${lesson.id}-${idx}`}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              custom={dir}
+              variants={stepMotion}
+              initial="enter"
+              animate="shown"
+              exit="leave"
               transition={{ duration: 0.22 }}
             >
               <StepView
@@ -114,6 +152,13 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
     </div>
   );
 }
+
+/** Continue rises into place; stepping back and forth slides sideways, following the swipe. */
+const stepMotion = {
+  enter: (d: number) => (d ? { opacity: 0, x: 32 * d } : { opacity: 0, y: 12 }),
+  shown: { opacity: 1, x: 0, y: 0 },
+  leave: (d: number) => (d ? { opacity: 0, x: -32 * d } : { opacity: 0, y: -8 }),
+};
 
 export const prefersReducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 

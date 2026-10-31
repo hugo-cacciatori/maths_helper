@@ -3,12 +3,14 @@ import { ArrowLeft, RotateCcw, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { allLessons } from '../content';
+import { useBackHome } from '../lib/nav';
 import { useProgress } from '../lib/store';
 import { prefersReducedMotion, StepView } from './LessonPlayer';
 
 /** Replays only the questions the learner missed; a question right at the first try leaves the list. */
 export function ReviewPlayer() {
   const { missed, addMissed, removeMissed } = useProgress();
+  const backHome = useBackHome();
   // Snapshot at start so the queue doesn't shift while answering.
   const [queue] = useState(() =>
     allLessons.flatMap(({ lesson, chapter }) => (missed[lesson.id] ?? []).filter((i) => i < lesson.steps.length).map((idx) => ({ lesson, chapter, idx }))),
@@ -22,7 +24,7 @@ export function ReviewPlayer() {
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
-          <Link to="/" className="btn !px-2" aria-label="Back to lessons">
+          <Link to="/" onClick={backHome} className="btn !px-2" aria-label="Back to lessons">
             <ArrowLeft size={18} />
           </Link>
           <div className="min-w-0 flex-1">
@@ -58,7 +60,7 @@ export function ReviewPlayer() {
                     <RotateCcw size={16} /> Review again
                   </button>
                 )}
-                <Link to="/" className="btn !py-2.5">
+                <Link to="/" onClick={backHome} className="btn !py-2.5">
                   Back to all lessons
                 </Link>
               </div>
