@@ -12,7 +12,11 @@ feedback at every step.
      from your browser or file manager when asked.
 
    Both work offline.
-2. Pick a lesson and follow the steps: read, watch or play with the visual, answer, get feedback, continue.
+2. New to the subject? Press **Start learning**: the **Start here** chapter teaches the background from zero
+   (reading step-by-step instructions, powers and logarithms, sums, growth rates, recursion, graphs and trees),
+   and each later chapter opens with a **warm-up** lesson before its exercises. Follow **Next** after each lesson.
+   Already comfortable? Pick any lesson and follow the steps: read, watch or play with the visual, answer, get
+   feedback, continue.
    Your progress is saved on your device and you can resume any lesson where you left off.
 3. Questions you get wrong are collected: use **Review mistakes** on the home screen to practise them again.
 4. Keyboard: press Enter to check an answer or continue, and 1–9 (or A–F) to pick a multiple-choice answer.

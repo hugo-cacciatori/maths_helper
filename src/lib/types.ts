@@ -45,6 +45,8 @@ export type Lesson = {
   id: string;
   title: string;
   summary: string;
+  /** Teaches background for the exercise lessons that follow; shown with a chip. */
+  warmup?: boolean;
   steps: Step[];
 };
 

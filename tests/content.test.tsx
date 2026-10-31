@@ -8,8 +8,8 @@ import { allLessons, chapters } from '../src/content';
 afterEach(cleanup);
 
 describe('content', () => {
-  it('has 8 chapters and unique lesson ids', () => {
-    expect(chapters).toHaveLength(8);
+  it('has 9 chapters and unique lesson ids', () => {
+    expect(chapters).toHaveLength(9);
     const ids = allLessons.map((l) => l.lesson.id);
     expect(new Set(ids).size).toBe(ids.length);
   });

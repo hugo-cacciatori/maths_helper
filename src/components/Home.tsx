@@ -66,7 +66,7 @@ export function Home() {
             return (
               <section key={ch.id}>
                 <div className="mb-4 flex items-end gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft font-extrabold text-brand">{ci + 1}</div>
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft font-extrabold text-brand">{ci}</div>
                   <div className="min-w-0 flex-1">
                     <h2 className="text-xl font-extrabold tracking-tight">{ch.title}</h2>
                     <p className="text-sm text-muted">
@@ -97,6 +97,7 @@ export function Home() {
                         </div>
                         <p className="mt-1.5 line-clamp-2 text-sm text-muted">{l.summary}</p>
                         <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
+                          {l.warmup && <span className="chip !bg-ok-soft !text-ok">warm-up</span>}
                           <span className="chip">{l.steps.length} steps</span>
                           {inProgress && <span className="chip !bg-brand-soft !text-brand">in progress</span>}
                         </div>

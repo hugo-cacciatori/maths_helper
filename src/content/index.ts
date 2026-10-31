@@ -1,4 +1,5 @@
 import type { Chapter, Lesson } from '../lib/types';
+import { ch0Lessons } from './lessons/ch0';
 import { ch1Lessons } from './lessons/ch1';
 import { ch1xLessons } from './lessons/ch1x';
 import { ch2Lessons } from './lessons/ch2';
@@ -14,8 +15,15 @@ import { ch7Lessons } from './lessons/ch7';
 import { ch7xLessons } from './lessons/ch7x';
 import { ch8Lessons } from './lessons/ch8';
 import { ch8xLessons } from './lessons/ch8x';
+import { warmups } from './lessons/warmups';
 
 export const chapters: Chapter[] = [
+  {
+    id: 'start',
+    title: 'Start here',
+    blurb: 'No background needed: the few ideas every later lesson relies on.',
+    lessons: ch0Lessons,
+  },
   {
     id: 'cost',
     title: 'Measuring cost',
@@ -26,43 +34,43 @@ export const chapters: Chapter[] = [
     id: 'try-everything',
     title: 'Try everything',
     blurb: 'Solve it the direct way, then search every possibility in order.',
-    lessons: [...ch2Lessons, ...ch2xLessons],
+    lessons: [warmups.c2, ...ch2Lessons, ...ch2xLessons],
   },
   {
     id: 'make-it-smaller',
     title: 'Make it smaller',
     blurb: 'Solve a smaller copy of the problem, then extend the answer.',
-    lessons: [...ch3Lessons, ...ch3xLessons],
+    lessons: [warmups.c3, ...ch3Lessons, ...ch3xLessons],
   },
   {
     id: 'split-in-two',
     title: 'Split in two',
     blurb: 'Cut the problem into halves, solve each, put the answers together.',
-    lessons: [...ch4Lessons, ...ch4xLessons],
+    lessons: [warmups.c4, ...ch4Lessons, ...ch4xLessons],
   },
   {
     id: 'change-the-shape',
     title: 'Change the shape',
     blurb: 'Reorganise the data first, then the problem becomes easy.',
-    lessons: [...ch5Lessons, ...ch5xLessons],
+    lessons: [warmups.c5, ...ch5Lessons, ...ch5xLessons],
   },
   {
     id: 'memory-for-speed',
     title: 'Memory for speed',
     blurb: 'Use extra space to avoid work.',
-    lessons: ch6Lessons,
+    lessons: [warmups.c6, ...ch6Lessons],
   },
   {
     id: 'best-step-first',
     title: 'Best step first',
     blurb: 'Take the most promising move each time — and know when that is safe.',
-    lessons: [...ch7Lessons, ...ch7xLessons],
+    lessons: [warmups.c7, ...ch7Lessons, ...ch7xLessons],
   },
   {
     id: 'puzzle-box',
     title: 'Puzzle box',
     blurb: 'Brain-teasers that mix several ideas.',
-    lessons: [...ch8Lessons, ...ch8xLessons],
+    lessons: [warmups.c8, ...ch8Lessons, ...ch8xLessons],
   },
 ];
 
