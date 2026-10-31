@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Algo Visual",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "identifier": "io.github.hugocacciatori.algovisual",
   "build": {
     "frontendDist": "../dist-web",
