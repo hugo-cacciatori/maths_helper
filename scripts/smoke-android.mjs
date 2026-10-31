@@ -33,7 +33,15 @@ const adb = (...args) => run('-s', serial, ...args);
 const wasInstalled = adb('shell', 'pm', 'list', 'packages', PKG).split(/\r?\n/).includes(`package:${PKG}`);
 let code = 1;
 try {
-  adb('install', '-r', apk);
+  // MIUI refuses USB installs (INSTALL_FAILED_USER_RESTRICTED) while the screen is off, as after a long build.
+  adb('shell', 'input', 'keyevent', 'KEYCODE_WAKEUP');
+  try {
+    adb('install', '-r', apk);
+  } catch (e) {
+    if (!String(e.message).includes('USER_RESTRICTED')) throw e;
+    await sleep(3000);
+    adb('install', '-r', apk);
+  }
   adb('logcat', '-c');
   adb('shell', 'am', 'start', '-W', '-n', `${PKG}/.MainActivity`, '--ez', 'smoke', 'true');
   let line;
