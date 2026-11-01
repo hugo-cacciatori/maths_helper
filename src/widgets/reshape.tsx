@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { t } from '../lib/i18n';
 import { ArrayRow, Caption, Controls, Panel, Stat, TreeView, useStepper, type CellTone, type TNode } from './kit';
 
 /* ======================= Heaps ======================= */
@@ -23,13 +24,13 @@ export function heapFrames(input: number[], mode: 'bottom-up' | 'top-down' | 'he
       if (l >= n) return;
       const c = l + 1 < n && A[l + 1] > A[l] ? l + 1 : l;
       if (A[k] >= A[c]) {
-        snap(`${A[k]} ≥ its larger child ${A[c]}: parental dominance holds.`, [k, c]);
+        snap(t(`${A[k]} ≥ its larger child ${A[c]}: parental dominance holds.`, `${A[k]} ≥ son plus grand enfant ${A[c]} : la dominance parentale est respectée.`), [k, c]);
         return;
       }
-      snap(`${A[k]} < its larger child ${A[c]}: swap them.`, [k, c]);
+      snap(t(`${A[k]} < its larger child ${A[c]}: swap them.`, `${A[k]} < son plus grand enfant ${A[c]} : on les échange.`), [k, c]);
       [A[k], A[c]] = [A[c], A[k]];
       swaps++;
-      snap('Swapped.', [c]);
+      snap(t('Swapped.', 'Échangés.'), [c]);
       k = c;
     }
   };
@@ -37,43 +38,61 @@ export function heapFrames(input: number[], mode: 'bottom-up' | 'top-down' | 'he
     const n = A.length;
     const vals = [...A];
     A.length = 0;
-    snap('Top-down: insert the keys one at a time, each at the next free leaf, then sift it up.');
-    for (let t = 0; t < n; t++) {
-      A.push(vals[t]);
-      let k = t;
-      snap(`Insert ${vals[t]} at the next free position.`, [k]);
+    snap(
+      t(
+        'Top-down: insert the keys one at a time, each at the next free leaf, then sift it up.',
+        'De haut en bas : on insère les clés une à une, chacune dans la prochaine feuille libre, puis on la fait remonter.',
+      ),
+    );
+    for (let q = 0; q < n; q++) {
+      A.push(vals[q]);
+      let k = q;
+      snap(t(`Insert ${vals[q]} at the next free position.`, `On insère ${vals[q]} à la prochaine position libre.`), [k]);
       while (k > 0) {
         const p = Math.floor((k - 1) / 2);
         if (A[p] >= A[k]) {
-          snap(`${A[k]} ≤ parent ${A[p]}: stop.`, [k, p]);
+          snap(t(`${A[k]} ≤ parent ${A[p]}: stop.`, `${A[k]} ≤ parent ${A[p]} : on s’arrête.`), [k, p]);
           break;
         }
-        snap(`${A[k]} > parent ${A[p]}: swap up.`, [k, p]);
+        snap(t(`${A[k]} > parent ${A[p]}: swap up.`, `${A[k]} > parent ${A[p]} : on remonte.`), [k, p]);
         [A[p], A[k]] = [A[k], A[p]];
         swaps++;
         k = p;
       }
     }
-    snap(`Heap built by insertions: ${A.join(' ')}.`);
+    snap(t(`Heap built by insertions: ${A.join(' ')}.`, `Tas construit par insertions : ${A.join(' ')}.`));
     return frames;
   }
-  snap(mode === 'heapsort' ? 'Stage 1: build a heap bottom-up.' : 'Bottom-up: fix every parental node, from the last one back to the root.');
+  snap(
+    mode === 'heapsort'
+      ? t('Stage 1: build a heap bottom-up.', 'Étape 1 : construire un tas de bas en haut.')
+      : t('Bottom-up: fix every parental node, from the last one back to the root.', 'De bas en haut : on répare chaque nœud parent, du dernier jusqu’à la racine.'),
+  );
   for (let k = Math.floor(A.length / 2) - 1; k >= 0; k--) {
-    snap(`Check parental node ${A[k]} (position ${k + 1}).`, [k]);
+    snap(t(`Check parental node ${A[k]} (position ${k + 1}).`, `On vérifie le nœud parent ${A[k]} (position ${k + 1}).`), [k]);
     siftDown(k, A.length);
   }
-  snap(`Heap: ${A.join(' ')}.`);
+  snap(t(`Heap: ${A.join(' ')}.`, `Tas : ${A.join(' ')}.`));
   if (mode === 'heapsort') {
     for (let n = A.length - 1; n > 0; n--) {
-      snap(`Stage 2: the root ${A[0]} is the maximum — swap it with the last heap element ${A[n]}.`, [0, n]);
+      snap(
+        t(
+          `Stage 2: the root ${A[0]} is the maximum — swap it with the last heap element ${A[n]}.`,
+          `Étape 2 : la racine ${A[0]} est le maximum — on l’échange avec le dernier élément du tas, ${A[n]}.`,
+        ),
+        [0, n],
+      );
       [A[0], A[n]] = [A[n], A[0]];
       swaps++;
       sorted++;
-      snap(`${A[n]} is in its final place. Restore the heap on the first ${n} elements.`, [0]);
+      snap(
+        t(`${A[n]} is in its final place. Restore the heap on the first ${n} elements.`, `${A[n]} est à sa place définitive. On rétablit le tas sur les ${n} premiers éléments.`),
+        [0],
+      );
       siftDown(0, n);
     }
     sorted = A.length;
-    snap(`Sorted: ${A.join(' ')}.`);
+    snap(t(`Sorted: ${A.join(' ')}.`, `Trié : ${A.join(' ')}.`));
   }
   return frames;
 }
@@ -98,8 +117,8 @@ export function HeapViz({ input, mode, onSolved }: { input: number[]; mode: 'bot
       />
       <ArrayRow items={f.arr.map((v) => ({ id: v, label: v }))} tone={tone} showIndex indexBase={1} size={40} />
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="swaps" value={f.swaps} tone="brand" />
-        <Stat label={mode === 'heapsort' ? 'sorted' : 'size'} value={mode === 'heapsort' ? f.sorted : f.arr.length} />
+        <Stat label={t('swaps', 'échanges')} value={f.swaps} tone="brand" />
+        <Stat label={mode === 'heapsort' ? t('sorted', 'triés') : t('size', 'taille')} value={mode === 'heapsort' ? f.sorted : f.arr.length} />
       </div>
       <Caption>{f.msg}</Caption>
       <Controls s={s} />
@@ -129,12 +148,12 @@ function rotL(n: AvlNode): AvlNode {
   return r;
 }
 
-type AvlFrame = { root: AvlNode | null; hot?: string; fresh?: string; msg: string; rotations: number };
+type AvlFrame = { root: AvlNode | null; hot?: string; fresh?: string; msg: string; rotations: number; rotation?: { kind: string; at: string } };
 
 export function avlFrames(keys: (number | string)[]): AvlFrame[] {
   let root: AvlNode | null = null;
   let rotations = 0;
-  const frames: AvlFrame[] = [{ root: null, msg: 'Start with an empty tree.', rotations: 0 }];
+  const frames: AvlFrame[] = [{ root: null, msg: t('Start with an empty tree.', 'On part d’un arbre vide.'), rotations: 0 }];
   const cmp = (a: number | string, b: number | string) => (a < b ? -1 : a > b ? 1 : 0);
   for (const key of keys) {
     // 1. plain BST insertion, remembering the path
@@ -153,7 +172,7 @@ export function avlFrames(keys: (number | string)[]): AvlFrame[] {
         cur = cur[side]!;
       }
     }
-    frames.push({ root: clone(root), fresh: String(key), msg: `Insert ${key} as in a binary search tree.`, rotations });
+    frames.push({ root: clone(root), fresh: String(key), msg: t(`Insert ${key} as in a binary search tree.`, `On insère ${key} comme dans un arbre binaire de recherche.`), rotations });
     // 2. deepest unbalanced ancestor
     let idx = -1;
     for (let k = path.length - 1; k >= 0; k--)
@@ -165,8 +184,22 @@ export function avlFrames(keys: (number | string)[]): AvlFrame[] {
     const bad = path[idx];
     const b = bf(bad);
     const kind = b > 1 ? (cmp(key, bad.left!.key) < 0 ? 'R' : 'LR') : cmp(key, bad.right!.key) > 0 ? 'L' : 'RL';
-    const name = { R: 'single right rotation (R)', L: 'single left rotation (L)', LR: 'double left-right rotation (LR)', RL: 'double right-left rotation (RL)' }[kind];
-    frames.push({ root: clone(root), hot: String(bad.key), fresh: String(key), msg: `Node ${bad.key} has balance factor ${b > 0 ? '+' : ''}${b}: apply a ${name} at ${bad.key}.`, rotations });
+    const name = t(
+      { R: 'single right rotation (R)', L: 'single left rotation (L)', LR: 'double left-right rotation (LR)', RL: 'double right-left rotation (RL)' },
+      { R: 'rotation simple à droite (R)', L: 'rotation simple à gauche (L)', LR: 'double rotation gauche-droite (LR)', RL: 'double rotation droite-gauche (RL)' },
+    )[kind];
+    const sign = `${b > 0 ? '+' : ''}${b}`;
+    frames.push({
+      root: clone(root),
+      hot: String(bad.key),
+      fresh: String(key),
+      msg: t(
+        `Node ${bad.key} has balance factor ${sign}: apply a ${name} at ${bad.key}.`,
+        `Le nœud ${bad.key} a un facteur d’équilibre de ${sign} : on applique une ${name} en ${bad.key}.`,
+      ),
+      rotations,
+      rotation: { kind, at: String(bad.key) },
+    });
     let sub: AvlNode;
     if (kind === 'R') sub = rotR(bad);
     else if (kind === 'L') sub = rotL(bad);
@@ -184,9 +217,13 @@ export function avlFrames(keys: (number | string)[]): AvlFrame[] {
       if (parent.left === bad) parent.left = sub;
       else parent.right = sub;
     }
-    frames.push({ root: clone(root), hot: String(sub.key), msg: `After the rotation the tree is balanced again.`, rotations });
+    frames.push({ root: clone(root), hot: String(sub.key), msg: t('After the rotation the tree is balanced again.', 'Après la rotation, l’arbre est de nouveau équilibré.'), rotations });
   }
-  frames.push({ root: clone(root), msg: `Done: height ${h(root)}, ${rotations} rotation${rotations === 1 ? '' : 's'}.`, rotations });
+  frames.push({
+    root: clone(root),
+    msg: t(`Done: height ${h(root)}, ${rotations} rotation${rotations === 1 ? '' : 's'}.`, `Terminé : hauteur ${h(root)}, ${rotations} rotation${rotations > 1 ? 's' : ''}.`),
+    rotations,
+  });
   return frames;
 }
 
@@ -206,7 +243,7 @@ export function AvlBuilder({ keys, onSolved }: { keys: (number | string)[]; onSo
   return (
     <Panel>
       <div className="flex flex-wrap items-center gap-1 font-mono text-sm">
-        <span className="mr-1 font-sans text-xs font-semibold text-muted">insert:</span>
+        <span className="mr-1 font-sans text-xs font-semibold text-muted">{t('insert:', 'insertion :')}</span>
         {keys.map((k, i) => {
           const inserted = frames.slice(0, s.i + 1).some((fr) => fr.fresh === String(k));
           return (
@@ -228,11 +265,16 @@ export function AvlBuilder({ keys, onSolved }: { keys: (number | string)[]; onSo
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Stat label="rotations" value={f.rotations} tone="brand" />
-        <Stat label="height" value={h(f.root)} />
+        <Stat label={t('height', 'hauteur')} value={h(f.root)} />
       </div>
       <Caption>{f.msg}</Caption>
       <Controls s={s} />
-      <p className="text-xs text-muted">Small numbers: balance factor = height(left) − height(right). AVL requires −1, 0 or +1 everywhere.</p>
+      <p className="text-xs text-muted">
+        {t(
+          'Small numbers: balance factor = height(left) − height(right). AVL requires −1, 0 or +1 everywhere.',
+          'Petits nombres : facteur d’équilibre = hauteur(gauche) − hauteur(droite). Un AVL exige −1, 0 ou +1 partout.',
+        )}
+      </p>
     </Panel>
   );
 }
@@ -280,11 +322,11 @@ export function AvlCheck() {
       <div className="flex flex-wrap gap-4 text-sm font-semibold text-muted">
         <label className="inline-flex items-center gap-2">
           <input type="checkbox" checked={showBf} onChange={(e) => setShowBf(e.target.checked)} className="accent-[var(--brand)]" />
-          show balance factors (orange = unbalanced)
+          {t('show balance factors (orange = unbalanced)', 'afficher les facteurs d’équilibre (orange = déséquilibré)')}
         </label>
         <label className="inline-flex items-center gap-2">
           <input type="checkbox" checked={showBst} onChange={(e) => setShowBst(e.target.checked)} className="accent-[var(--brand)]" />
-          check search-tree order (red = misplaced)
+          {t('check search-tree order (red = misplaced)', 'vérifier l’ordre de l’arbre de recherche (rouge = mal placé)')}
         </label>
       </div>
     </Panel>
@@ -301,7 +343,7 @@ export function WineDecoder({ onSolved, tasters = 10 }: { onSolved?: () => void;
   return (
     <Panel>
       <label className="flex flex-wrap items-center gap-3 text-sm">
-        <span className="font-semibold text-muted">The poisoned barrel is number</span>
+        <span className="font-semibold text-muted">{t('The poisoned barrel is number', 'Le tonneau empoisonné porte le numéro')}</span>
         <input
           type="number"
           min={0}
@@ -313,14 +355,16 @@ export function WineDecoder({ onSolved, tasters = 10 }: { onSolved?: () => void;
           }}
           className="w-24 rounded-lg border-2 border-border bg-surface px-2 py-1 font-mono"
         />
-        <span className="text-muted">(barrels 0 to 999)</span>
+        <span className="text-muted">{t('(barrels 0 to 999)', '(tonneaux 0 à 999)')}</span>
       </label>
       <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
         {bits.map((b, i) => {
           const dies = revealed && b === 1;
           return (
             <div key={i} className="flex flex-col items-center gap-1 rounded-xl bg-surface-2 py-2">
-              <div className="text-[10px] font-semibold text-muted">taster {i + 1}</div>
+              <div className="text-[10px] font-semibold text-muted">
+                {t('taster', 'goûteur')} {i + 1}
+              </div>
               <div className={`flex h-9 w-9 items-center justify-center rounded-full text-lg transition ${dies ? 'bg-bad text-white' : revealed ? 'bg-ok-soft text-ok' : 'bg-surface'}`}>
                 {dies ? '✝' : revealed ? '✓' : '?'}
               </div>
@@ -333,8 +377,14 @@ export function WineDecoder({ onSolved, tasters = 10 }: { onSolved?: () => void;
       </div>
       <Caption tone={revealed ? 'ok' : 'neutral'}>
         {revealed
-          ? `30 days later: read dead = 1, alive = 0 → ${bits.join('')} in binary = **${barrel}**. Found with a single round of tasting.`
-          : `Taster $i$ drinks a drop from every barrel whose number has a 1 in binary position $i$. Barrel ${barrel} = ${bits.join('')}₂.`}
+          ? t(
+              `30 days later: read dead = 1, alive = 0 → ${bits.join('')} in binary = **${barrel}**. Found with a single round of tasting.`,
+              `30 jours plus tard : on lit mort = 1, vivant = 0 → ${bits.join('')} en binaire = **${barrel}**. Trouvé en une seule tournée de dégustation.`,
+            )
+          : t(
+              `Taster $i$ drinks a drop from every barrel whose number has a 1 in binary position $i$. Barrel ${barrel} = ${bits.join('')}₂.`,
+              `Le goûteur $i$ boit une goutte de chaque tonneau dont le numéro a un 1 en position binaire $i$. Tonneau ${barrel} = ${bits.join('')}₂.`,
+            )}
       </Caption>
       <button
         className="btn-primary self-start"
@@ -344,7 +394,7 @@ export function WineDecoder({ onSolved, tasters = 10 }: { onSolved?: () => void;
         }}
         disabled={revealed}
       >
-        Wait 30 days
+        {t('Wait 30 days', 'Attendre 30 jours')}
       </button>
     </Panel>
   );

@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { ChevronLeft, ChevronRight, Pause, Play, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { renderInline } from '../components/Prose';
+import { t } from '../lib/i18n';
 
 /* ---------- layout ---------- */
 
@@ -113,18 +114,18 @@ export type Stepper = ReturnType<typeof useStepper>;
 export function Controls({ s, extra }: { s: Stepper; extra?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button className="btn" onClick={s.reset} aria-label="Restart">
+      <button className="btn" onClick={s.reset} aria-label={t('Restart', 'Recommencer')}>
         <RotateCcw size={15} />
       </button>
-      <button className="btn" onClick={s.prev} disabled={s.i === 0} aria-label="Previous step">
+      <button className="btn" onClick={s.prev} disabled={s.i === 0} aria-label={t('Previous step', 'Étape précédente')}>
         <ChevronLeft size={16} />
       </button>
       <button className="btn min-w-24" onClick={s.toggle} disabled={s.i >= s.count - 1}>
         {s.playing ? <Pause size={15} /> : <Play size={15} />}
-        {s.playing ? 'Pause' : 'Play'}
+        {s.playing ? 'Pause' : t('Play', 'Lecture')}
       </button>
-      <button className="btn" onClick={s.next} disabled={s.i >= s.count - 1} aria-label="Next step">
-        Step <ChevronRight size={16} />
+      <button className="btn" onClick={s.next} disabled={s.i >= s.count - 1} aria-label={t('Next step', 'Étape suivante')}>
+        {t('Step', 'Pas')} <ChevronRight size={16} />
       </button>
       <div className="ml-auto flex items-center gap-2 text-xs font-semibold text-muted">
         {extra}
@@ -177,11 +178,11 @@ export function ArrayRow({
   wrap?: boolean;
 }) {
   return (
-    <div className={wrap ? 'pb-1' : 'overflow-x-auto pb-1'} role="group" aria-label={`Row of ${items.length}: ${items.map((it) => plain(it.label)).join(', ')}`}>
+    <div className={wrap ? 'pb-1' : 'overflow-x-auto pb-1'} role="group" aria-label={`${t('Row of', 'Rangée de')} ${items.length}${t(':', ' :')} ${items.map((it) => plain(it.label)).join(', ')}`}>
       <div className={wrap ? 'flex flex-wrap justify-center gap-1.5 px-1' : 'mx-auto flex w-max gap-1.5 px-1'}>
         {items.map((it, i) => {
-          const t = tone?.(i) ?? 'idle';
-          const strong = t !== 'idle' && t !== 'dim';
+          const tn = tone?.(i) ?? 'idle';
+          const strong = tn !== 'idle' && tn !== 'dim';
           const ptrs = pointers.filter((p) => p.at === i);
           return (
             <motion.div layout key={it.id} transition={{ type: 'spring', stiffness: 380, damping: 32 }} className="flex flex-col items-center gap-1">
@@ -193,7 +194,7 @@ export function ArrayRow({
                 style={{
                   width: size,
                   height: size,
-                  background: toneBg[t],
+                  background: toneBg[tn],
                   color: strong ? '#fff' : 'var(--text)',
                   borderColor: strong ? 'transparent' : 'var(--border)',
                 }}
@@ -290,9 +291,12 @@ export function GraphView({
   const halfH = rect ? 15 * k : rr;
   const edgeColor = { idle: 'var(--v-idle-stroke)', active: 'var(--v-active)', tree: 'var(--v-visit)', dim: 'var(--v-dim)' };
   const name = (id: string) => pos[id].label ?? id;
-  const description = `Graph with ${nodes.length} vertices (${nodes.map((n) => name(n.id)).join(', ')}) and edges ${edges
-    .map((e) => `${name(e.u)} ${e.directed ? 'to' : '–'} ${name(e.v)}${e.w !== undefined ? ` (${e.w})` : ''}`)
-    .join(', ')}`;
+  const edgeList = edges.map((e) => `${name(e.u)} ${e.directed ? '→' : '–'} ${name(e.v)}${e.w !== undefined ? ` (${e.w})` : ''}`).join(', ');
+  const nodeList = nodes.map((n) => name(n.id)).join(', ');
+  const description = t(
+    `Graph with ${nodes.length} vertices (${nodeList}) and edges ${edgeList}`,
+    `Graphe à ${nodes.length} sommets (${nodeList}) et arêtes ${edgeList}`,
+  );
   return (
     <svg
       ref={svgRef}
@@ -328,7 +332,7 @@ export function GraphView({
         const y1 = a.y + (dy / len) * ca;
         const x2 = b.x - (dx / len) * cb;
         const y2 = b.y - (dy / len) * cb;
-        const t = edgeTone?.(e, i) ?? 'idle';
+        const tn = edgeTone?.(e, i) ?? 'idle';
         const mx = (a.x + b.x) / 2;
         const my = (a.y + b.y) / 2;
         return (
@@ -338,10 +342,10 @@ export function GraphView({
               y1={y1}
               x2={x2}
               y2={y2}
-              stroke={edgeColor[t]}
-              strokeWidth={(t === 'idle' || t === 'dim' ? 2 : 4) * k}
+              stroke={edgeColor[tn]}
+              strokeWidth={(tn === 'idle' || tn === 'dim' ? 2 : 4) * k}
               strokeLinecap="round"
-              markerEnd={e.directed ? `url(#arrow-${t})` : undefined}
+              markerEnd={e.directed ? `url(#arrow-${tn})` : undefined}
               style={{ transition: 'stroke 0.3s, stroke-width 0.3s' }}
             />
             {e.w !== undefined && (
@@ -356,8 +360,8 @@ export function GraphView({
         );
       })}
       {nodes.map((n) => {
-        const t = fill?.(n.id) ?? 'idle';
-        const strong = t !== 'idle' && t !== 'dim';
+        const tn = fill?.(n.id) ?? 'idle';
+        const strong = tn !== 'idle' && tn !== 'dim';
         const b = badge?.(n.id);
         return (
           <g
@@ -365,7 +369,7 @@ export function GraphView({
             onClick={() => onNodeClick?.(n.id)}
             style={{ cursor: onNodeClick ? 'pointer' : 'default' }}
             role={onNodeClick ? 'button' : undefined}
-            aria-label={onNodeClick ? `Node ${n.label ?? n.id}` : undefined}
+            aria-label={onNodeClick ? `${t('Node', 'Nœud')} ${n.label ?? n.id}` : undefined}
             className="outline-none focus-visible:[&>*:first-child]:stroke-[var(--brand)]"
             {...keyActivate(onNodeClick && (() => onNodeClick(n.id)))}
           >
@@ -376,13 +380,13 @@ export function GraphView({
                 width={halfW(n) * 2}
                 height={halfH * 2}
                 rx={8}
-                fill={toneBg[t]}
+                fill={toneBg[tn]}
                 stroke={strong ? 'transparent' : 'var(--v-idle-stroke)'}
                 strokeWidth={2}
                 style={{ transition: 'fill 0.3s' }}
               />
             ) : (
-              <circle cx={n.x} cy={n.y} r={rr} fill={toneBg[t]} stroke={strong ? 'transparent' : 'var(--v-idle-stroke)'} strokeWidth={2} style={{ transition: 'fill 0.3s' }} />
+              <circle cx={n.x} cy={n.y} r={rr} fill={toneBg[tn]} stroke={strong ? 'transparent' : 'var(--v-idle-stroke)'} strokeWidth={2} style={{ transition: 'fill 0.3s' }} />
             )}
             <text
               x={n.x}
@@ -464,16 +468,23 @@ export function TreeView({
   const offset = (width - cols * colW) / 2 + colW / 2;
   const P = (id: string) => ({ x: offset + pos[id].x * colW, y: 36 + pos[id].y * rowH });
   const height = 36 + depth * rowH + r + 14;
-  if (!root) return <div className="py-8 text-center text-sm text-muted">(empty tree)</div>;
+  if (!root) return <div className="py-8 text-center text-sm text-muted">{t('(empty tree)', '(arbre vide)')}</div>;
   const describe = (n: TNode | null | undefined): string =>
-    !n ? '' : n.left || n.right ? `${n.label} (left: ${describe(n.left) || 'none'}; right: ${describe(n.right) || 'none'})` : n.label;
+    !n
+      ? ''
+      : n.left || n.right
+        ? t(
+            `${n.label} (left: ${describe(n.left) || 'none'}; right: ${describe(n.right) || 'none'})`,
+            `${n.label} (gauche : ${describe(n.left) || 'aucun'} ; droite : ${describe(n.right) || 'aucun'})`,
+          )
+        : n.label;
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       className="mx-auto w-full"
       style={{ maxWidth: width }}
       role={onNodeClick ? 'group' : 'img'}
-      aria-label={`Tree: ${describe(root)}`}
+      aria-label={`${t('Tree:', 'Arbre :')} ${describe(root)}`}
     >
       {edges.map(([a, b]) => {
         const pa = P(a);
@@ -491,8 +502,8 @@ export function TreeView({
       })}
       {Object.keys(pos).map((id) => {
         const p = P(id);
-        const t = fill?.(id) ?? 'idle';
-        const strong = t !== 'idle' && t !== 'dim';
+        const tn = fill?.(id) ?? 'idle';
+        const strong = tn !== 'idle' && tn !== 'dim';
         const b = badge?.(id);
         return (
           <motion.g
@@ -503,11 +514,11 @@ export function TreeView({
             onClick={() => onNodeClick?.(id)}
             style={{ cursor: onNodeClick ? 'pointer' : 'default' }}
             role={onNodeClick ? 'button' : undefined}
-            aria-label={onNodeClick ? `Node ${labels[id]}` : undefined}
+            aria-label={onNodeClick ? `${t('Node', 'Nœud')} ${labels[id]}` : undefined}
             className="outline-none focus-visible:[&>*:first-child]:stroke-[var(--brand)]"
             {...keyActivate(onNodeClick && (() => onNodeClick(id)))}
           >
-            <circle r={r} fill={toneBg[t]} stroke={strong ? 'transparent' : 'var(--v-idle-stroke)'} strokeWidth={2} style={{ transition: 'fill 0.3s' }} />
+            <circle r={r} fill={toneBg[tn]} stroke={strong ? 'transparent' : 'var(--v-idle-stroke)'} strokeWidth={2} style={{ transition: 'fill 0.3s' }} />
             <text y={5} textAnchor="middle" fontSize={14} fontWeight={700} fill={strong ? '#fff' : 'var(--v-ink)'} style={{ pointerEvents: 'none' }}>
               {labels[id]}
             </text>

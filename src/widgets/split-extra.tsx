@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { t } from '../lib/i18n';
 import { ArrayRow, Caption, Controls, Panel, Slider, Stat, TreeView, useStepper, type CellTone, type TNode } from './kit';
 
 /* ======================= Nuts and bolts ======================= */
@@ -22,22 +23,45 @@ export function nutsBoltsFrames(nuts0: number[], bolts0: number[]): NbFrame[] {
     a.splice(lo, seg.length, ...small, ...eq, ...big);
     return lo + small.length;
   };
-  snap(0, nuts.length - 1, 'Nuts can only be compared with bolts. Size is shown here for you — the algorithm cannot see it.');
+  snap(
+    0,
+    nuts.length - 1,
+    t(
+      'Nuts can only be compared with bolts. Size is shown here for you — the algorithm cannot see it.',
+      'Les écrous ne peuvent être comparés qu’aux boulons. La taille est affichée ici pour vous — l’algorithme, lui, ne la voit pas.',
+    ),
+  );
   const solve = (lo: number, hi: number) => {
     if (lo > hi) return;
     const bolt = bolts[lo];
     comps += hi - lo + 1;
     const m = partition(nuts, lo, hi, bolt);
-    snap(lo, hi, `Try bolt ${bolt} on all ${hi - lo + 1} nuts of this group: smaller nuts go left, bigger right, and one fits.`, { bolt, nut: bolt });
+    snap(
+      lo,
+      hi,
+      t(
+        `Try bolt ${bolt} on all ${hi - lo + 1} nuts of this group: smaller nuts go left, bigger right, and one fits.`,
+        `On essaie le boulon ${bolt} sur les ${hi - lo + 1} écrous du groupe : les plus petits à gauche, les plus grands à droite, et un seul va.`,
+      ),
+      { bolt, nut: bolt },
+    );
     comps += hi - lo; // the matching nut is compared with the other bolts of the group
     partition(bolts, lo, hi, bolt);
     matched.push(bolt);
-    snap(lo, hi, `Use nut ${bolt} to split the bolts the same way (${hi - lo} more tries). Pair ${bolt} is matched.`, { bolt, nut: bolt });
+    snap(
+      lo,
+      hi,
+      t(
+        `Use nut ${bolt} to split the bolts the same way (${hi - lo} more tries). Pair ${bolt} is matched.`,
+        `On utilise l’écrou ${bolt} pour partager les boulons de la même façon (${hi - lo} essais de plus). La paire ${bolt} est appariée.`,
+      ),
+      { bolt, nut: bolt },
+    );
     solve(lo, m - 1);
     solve(m + 1, hi);
   };
   solve(0, nuts.length - 1);
-  snap(0, nuts.length - 1, `All pairs matched with ${comps} nut–bolt tries.`);
+  snap(0, nuts.length - 1, t(`All pairs matched with ${comps} nut–bolt tries.`, `Toutes les paires appariées en ${comps} essais écrou–boulon.`));
   return frames;
 }
 
@@ -50,14 +74,14 @@ export function NutsBolts({ nuts = [3, 6, 1, 5, 2, 4, 7], bolts = [4, 1, 7, 6, 3
   return (
     <Panel>
       <div className="grid grid-cols-[48px_1fr] items-center gap-2">
-        <span className="text-right text-xs font-bold text-muted">bolts</span>
+        <span className="text-right text-xs font-bold text-muted">{t('bolts', 'boulons')}</span>
         <ArrayRow items={f.bolts.map((v) => ({ id: `b${v}`, label: v }))} tone={tone(f.bolts)} size={40} />
-        <span className="text-right text-xs font-bold text-muted">nuts</span>
+        <span className="text-right text-xs font-bold text-muted">{t('nuts', 'écrous')}</span>
         <ArrayRow items={f.nuts.map((v) => ({ id: `n${v}`, label: v }))} tone={tone(f.nuts)} size={40} />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="nut–bolt tries" value={f.comps} tone="brand" />
-        <Stat label="pairs matched" value={`${f.matched.length} / ${nuts.length}`} tone="ok" />
+        <Stat label={t('nut–bolt tries', 'essais écrou–boulon')} value={f.comps} tone="brand" />
+        <Stat label={t('pairs matched', 'paires appariées')} value={`${f.matched.length} / ${nuts.length}`} tone="ok" />
       </div>
       <Caption>{f.msg}</Caption>
       <Controls s={s} />
@@ -109,7 +133,7 @@ export function TreeRebuilder({ inord, post, onSolved }: { inord: string[]; post
       setWrong(null);
     } else setWrong(id);
   };
-  const row = (seq: string[], label: string) => (
+  const row = (seq: string[], label: string, isPost: boolean) => (
     <div className="space-y-1">
       <div className="text-center text-xs font-bold text-muted">{label}</div>
       <ArrayRow
@@ -117,27 +141,36 @@ export function TreeRebuilder({ inord, post, onSolved }: { inord: string[]; post
         items={seq.map((v) => ({ id: `${label}${v}`, label: v }))}
         size={36}
         tone={(i) => (placed.includes(seq[i]) ? 'done' : !done && sub.has(seq[i]) ? (seq[i] === wrong ? 'bad' : 'idle') : 'dim')}
-        onCellClick={label === 'post-order' ? (i) => pick(seq[i]) : undefined}
+        onCellClick={isPost ? (i) => pick(seq[i]) : undefined}
       />
     </div>
   );
   return (
     <Panel>
-      {row(inord, 'in-order')}
-      {row(post, 'post-order')}
+      {row(inord, t('in-order', 'infixe'), false)}
+      {row(post, t('post-order', 'postfixe'), true)}
       <div className="min-h-40">
         <TreeView root={prune(full, new Set(placed))} colW={40} rowH={54} minWidth={300} />
       </div>
       <Caption tone={done ? 'ok' : wrong ? 'warn' : 'neutral'}>
         {done
-          ? 'Tree rebuilt. Each post-order block ends with its root; the in-order list tells what goes left and right of it.'
+          ? t(
+              'Tree rebuilt. Each post-order block ends with its root; the in-order list tells what goes left and right of it.',
+              'Arbre reconstruit. Chaque bloc de la liste postfixe finit par sa racine ; la liste infixe dit ce qui va à sa gauche et à sa droite.',
+            )
           : wrong
-            ? `Not ${wrong}. In the highlighted part of the post-order list, which element is visited last?`
-            : `Click, in the post-order row, the root of the highlighted part (${sub.size} node${sub.size === 1 ? '' : 's'}).`}
+            ? t(
+                `Not ${wrong}. In the highlighted part of the post-order list, which element is visited last?`,
+                `Pas ${wrong}. Dans la partie en surbrillance de la liste postfixe, quel élément est visité en dernier ?`,
+              )
+            : t(
+                `Click, in the post-order row, the root of the highlighted part (${sub.size} node${sub.size === 1 ? '' : 's'}).`,
+                `Cliquez, dans la rangée postfixe, sur la racine de la partie en surbrillance (${sub.size} nœud${sub.size === 1 ? '' : 's'}).`,
+              )}
       </Caption>
       <div className="flex gap-2">
         <button className="btn" onClick={() => pick(next)} disabled={done}>
-          Show next
+          {t('Show next', 'Montrer la suivante')}
         </button>
         <button
           className="btn"
@@ -146,7 +179,7 @@ export function TreeRebuilder({ inord, post, onSolved }: { inord: string[]; post
             setWrong(null);
           }}
         >
-          Reset
+          {t('Reset', 'Recommencer')}
         </button>
       </div>
     </Panel>
@@ -164,7 +197,16 @@ export function quickSelectFrames(input: number[], k: number): QsFrame[] {
   let comps = 0;
   let lo = 0;
   let hi = a.length - 1;
-  frames.push({ arr: [...a], lo, hi, comps, msg: `The ${k}${['st', 'nd', 'rd'][k - 1] ?? 'th'} largest sits at position ${target} once sorted. Partition, then keep only the side that contains that position.` });
+  frames.push({
+    arr: [...a],
+    lo,
+    hi,
+    comps,
+    msg: t(
+      `The ${k}${['st', 'nd', 'rd'][k - 1] ?? 'th'} largest sits at position ${target} once sorted. Partition, then keep only the side that contains that position.`,
+      `La ${k === 1 ? '1re' : `${k}e`} plus grande valeur est en position ${target} une fois le tableau trié. On partitionne, puis on ne garde que le côté qui contient cette position.`,
+    ),
+  });
   for (;;) {
     const p = a[lo];
     const seg = a.slice(lo + 1, hi + 1);
@@ -174,11 +216,21 @@ export function quickSelectFrames(input: number[], k: number): QsFrame[] {
     a.splice(lo, hi - lo + 1, ...small, p, ...big);
     const s = lo + small.length;
     if (s === target) {
-      frames.push({ arr: [...a], lo, hi, pivotAt: s, comps, found: s, msg: `Pivot ${p} lands at position ${s}: that is the answer, **${p}**.` });
+      frames.push({ arr: [...a], lo, hi, pivotAt: s, comps, found: s, msg: t(`Pivot ${p} lands at position ${s}: that is the answer, **${p}**.`, `Le pivot ${p} arrive en position ${s} : c’est la réponse, **${p}**.`) });
       return frames;
     }
     const goRight = s < target;
-    frames.push({ arr: [...a], lo, hi, pivotAt: s, comps, msg: `Pivot ${p} lands at position ${s}; the target ${target} is to its ${goRight ? 'right' : 'left'}, so drop the other side.` });
+    frames.push({
+      arr: [...a],
+      lo,
+      hi,
+      pivotAt: s,
+      comps,
+      msg: t(
+        `Pivot ${p} lands at position ${s}; the target ${target} is to its ${goRight ? 'right' : 'left'}, so drop the other side.`,
+        `Le pivot ${p} arrive en position ${s} ; la cible ${target} est à sa ${goRight ? 'droite' : 'gauche'}, on laisse donc tomber l’autre côté.`,
+      ),
+    });
     if (goRight) lo = s + 1;
     else hi = s - 1;
   }
@@ -194,8 +246,8 @@ export function QuickSelect({ values = [9, 2, 7, 4, 12, 5, 8, 1, 10], onSolved }
     <Panel>
       <ArrayRow items={f.arr.map((v) => ({ id: v, label: v }))} tone={tone} showIndex size={40} />
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="comparisons" value={f.comps} tone="brand" />
-        <Stat label="still in play" value={Math.max(0, f.hi - f.lo + 1)} />
+        <Stat label={t('comparisons', 'comparaisons')} value={f.comps} tone="brand" />
+        <Stat label={t('still in play', 'encore en jeu')} value={Math.max(0, f.hi - f.lo + 1)} />
       </div>
       <Caption tone={f.found !== undefined ? 'ok' : 'neutral'}>{f.msg}</Caption>
       <Controls s={s} />

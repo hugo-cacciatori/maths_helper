@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { dec, num, t } from '../lib/i18n';
 import { Caption, Controls, GraphView, Panel, Stat, useStepper, type GEdge, type GNode } from './kit';
 
 /* ======================= Equal-sum split: try every subset ======================= */
@@ -17,7 +18,7 @@ export function partitionFrames(values: number[], fixFirst: boolean) {
     const sum = values.reduce((a, v, i) => a + ((m >> i) & 1 ? v : 0), 0);
     const hit = sum === target;
     if (hit) found.push(m);
-    frames.push({ mask: m, sum, checked, found: [...found], msg: hit ? `Sum ${sum} = ${target}: a valid split!` : `Sum ${sum} ≠ ${target}.` });
+    frames.push({ mask: m, sum, checked, found: [...found], msg: hit ? t(`Sum ${sum} = ${target}: a valid split!`, `Somme ${sum} = ${target} : un partage valide !`) : t(`Sum ${sum} ≠ ${target}.`, `Somme ${sum} ≠ ${target}.`) });
   }
   return { frames, total, target };
 }
@@ -32,7 +33,7 @@ export function PartitionSearch({ values = [3, 1, 4, 2, 2], onSolved }: { values
       <div className="flex flex-wrap justify-center gap-6">
         {[true, false].map((inA) => (
           <div key={String(inA)} className="flex min-w-36 flex-col items-center gap-2 rounded-xl bg-surface-2 p-3">
-            <div className="text-xs font-bold uppercase tracking-wide text-muted">group {inA ? 'A' : 'B'}</div>
+            <div className="text-xs font-bold uppercase tracking-wide text-muted">{t('group', 'groupe')} {inA ? 'A' : 'B'}</div>
             <div className="flex min-h-10 flex-wrap justify-center gap-1.5">
               {values.map((v, i) =>
                 ((f.mask >> i) & 1) === (inA ? 1 : 0) ? (
@@ -46,9 +47,9 @@ export function PartitionSearch({ values = [3, 1, 4, 2, 2], onSolved }: { values
         ))}
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="subsets tried" value={`${f.checked} / ${frames.length}`} tone="brand" />
-        <Stat label="sum of A" value={`${f.sum} (want ${target})`} />
-        <Stat label="splits found" value={f.found.length} tone="ok" />
+        <Stat label={t('subsets tried', 'sous-ensembles essayés')} value={`${f.checked} / ${frames.length}`} tone="brand" />
+        <Stat label={t('sum of A', 'somme de A')} value={`${f.sum} (${t('want', 'but')} ${target})`} />
+        <Stat label={t('splits found', 'partages trouvés')} value={f.found.length} tone="ok" />
       </div>
       <Caption tone={f.sum === target ? 'ok' : 'neutral'}>{f.msg}</Caption>
       <Controls
@@ -56,7 +57,7 @@ export function PartitionSearch({ values = [3, 1, 4, 2, 2], onSolved }: { values
         extra={
           <label className="inline-flex items-center gap-1.5">
             <input type="checkbox" checked={fixFirst} onChange={(e) => setFixFirst(e.target.checked)} className="accent-[var(--brand)]" />
-            keep the first value in A
+            {t('keep the first value in A', 'garder la première valeur dans A')}
           </label>
         }
       />
@@ -111,7 +112,9 @@ export function cliqueFrames(g: { nodes: GNode[]; edges: GEdge[] }, k: number) {
       checks,
       found: [...found],
       tried: i + 1,
-      msg: missing.length ? `{${group.join(', ')}}: missing edge ${missing[0].join('–')}.` : `{${group.join(', ')}}: every pair is connected — a clique of size ${k}!`,
+      msg: missing.length
+        ? t(`{${group.join(', ')}}: missing edge ${missing[0].join('–')}.`, `{${group.join(', ')}} : il manque l’arête ${missing[0].join('–')}.`)
+        : t(`{${group.join(', ')}}: every pair is connected — a clique of size ${k}!`, `{${group.join(', ')}} : chaque paire est reliée — une clique de taille ${k} !`),
     };
   });
 }
@@ -133,9 +136,9 @@ export function CliqueSearch({ onSolved }: { onSolved?: () => void }) {
         edgeTone={(e) => (inGroup(e) ? 'tree' : 'dim')}
       />
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="groups tried" value={`${f.tried} / ${frames.length}`} tone="brand" />
-        <Stat label="pair checks" value={f.checks} />
-        <Stat label="cliques found" value={f.found.length} tone="ok" />
+        <Stat label={t('groups tried', 'groupes essayés')} value={`${f.tried} / ${frames.length}`} tone="brand" />
+        <Stat label={t('pair checks', 'paires vérifiées')} value={f.checks} />
+        <Stat label={t('cliques found', 'cliques trouvées')} value={f.found.length} tone="ok" />
       </div>
       <Caption tone={f.missing.length ? 'neutral' : 'ok'}>{f.msg}</Caption>
       <Controls
@@ -162,12 +165,12 @@ const fact = (n: number) => Array.from({ length: n }, (_, i) => i + 1).reduce((a
 function human(seconds: number) {
   if (seconds < 1e-3) return '< 1 ms';
   if (seconds < 1) return `${Math.round(seconds * 1000)} ms`;
-  if (seconds < 60) return `${seconds.toFixed(1)} s`;
+  if (seconds < 60) return `${dec(seconds, 1)} s`;
   if (seconds < 3600) return `${Math.round(seconds / 60)} min`;
   if (seconds < 86400) return `${Math.round(seconds / 3600)} h`;
-  if (seconds < 3.15e7) return `${Math.round(seconds / 86400)} days`;
+  if (seconds < 3.15e7) return `${Math.round(seconds / 86400)} ${t('days', 'jours')}`;
   const y = seconds / 3.15e7;
-  return y < 1e6 ? `${Math.round(y).toLocaleString('en')} years` : `${y.toExponential(1).replace('e+', 'e')} years`;
+  return y < 1e6 ? `${num(Math.round(y))} ${t('years', 'ans')}` : `${y.toExponential(1).replace('e+', 'e')} ${t('years', 'ans')}`;
 }
 
 export function ExplosionTable() {
@@ -178,25 +181,25 @@ export function ExplosionTable() {
         <thead>
           <tr className="text-left text-xs uppercase tracking-wide text-muted">
             <th className="py-1.5 pr-3 font-semibold">n</th>
-            <th className="px-2 text-right font-semibold">2ⁿ subsets</th>
-            <th className="px-2 text-right font-semibold">time</th>
-            <th className="px-2 text-right font-semibold">n! orders</th>
-            <th className="px-2 text-right font-semibold">time</th>
+            <th className="px-2 text-right font-semibold">{t('2ⁿ subsets', '2ⁿ sous-ensembles')}</th>
+            <th className="px-2 text-right font-semibold">{t('time', 'temps')}</th>
+            <th className="px-2 text-right font-semibold">{t('n! orders', 'n! ordres')}</th>
+            <th className="px-2 text-right font-semibold">{t('time', 'temps')}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((n) => (
             <tr key={n} className="border-t border-border font-mono">
               <td className="py-1.5 pr-3 font-semibold">{n}</td>
-              <td className="px-2 text-right">{(2 ** n).toLocaleString('en')}</td>
+              <td className="px-2 text-right">{num(2 ** n)}</td>
               <td className="px-2 text-right text-muted">{human(2 ** n / 1e9)}</td>
-              <td className="px-2 text-right">{fact(n) < 1e9 ? fact(n).toLocaleString('en') : fact(n).toExponential(2).replace('e+', 'e')}</td>
+              <td className="px-2 text-right">{fact(n) < 1e9 ? num(fact(n)) : fact(n).toExponential(2).replace('e+', 'e')}</td>
               <td className="px-2 text-right text-muted">{human(fact(n) / 1e9)}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="mt-1 text-xs text-muted">Times assume a billion candidates checked per second.</p>
+      <p className="mt-1 text-xs text-muted">{t('Times assume a billion candidates checked per second.', 'Temps calculés pour un milliard de candidats vérifiés par seconde.')}</p>
     </div>
   );
 }

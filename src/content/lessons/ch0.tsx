@@ -1,3 +1,4 @@
+import { t } from '../../lib/i18n';
 import { texNum } from '../../lib/random';
 import type { Lesson, QuestionStep } from '../../lib/types';
 import { ArrayScan, GaussPairs, GrowthTable, HalvingLadder, NeighbourPicker } from '../../widgets/basics';
@@ -8,7 +9,7 @@ import { ArrayRow, CodeBlock, GraphView, TreeView, type GEdge, type GNode, type 
 /* ---------- small programs to trace ---------- */
 
 export const sumProgram: Program = {
-  name: 'Add 1 to n',
+  name: t('Add 1 to n', 'Additionner de 1 à n'),
   lines: ['S ← 0', 'for i ← 1 to n do', '    S ← S + i', 'return S'],
   op: 2,
   *run(n) {
@@ -25,7 +26,7 @@ export const sumProgram: Program = {
 };
 
 export const stepTwoProgram: Program = {
-  name: 'Jump by two',
+  name: t('Jump by two', 'Sauter de deux en deux'),
   lines: ['i ← 1', 'while i ≤ n', '    i ← i + 2'],
   op: 2,
   *run(n) {
@@ -41,7 +42,7 @@ export const stepTwoProgram: Program = {
 };
 
 export const gridProgram: Program = {
-  name: 'A loop inside a loop',
+  name: t('A loop inside a loop', 'Une boucle dans une boucle'),
   lines: ['for i ← 1 to n do', '    for j ← 1 to n do', '        count ← count + 1'],
   op: 2,
   *run(n) {
@@ -62,7 +63,14 @@ export const factSpec: ChainSpec = {
   label: (k) => `fact(${k})`,
   base: 1,
   baseValue: 1,
-  combine: (k, sub) => ({ value: k * sub, ops: 1, note: `fact(${k}) = ${k} × fact(${k - 1}) = ${k} × ${sub} = ${k * sub} (1 multiplication).` }),
+  combine: (k, sub) => ({
+    value: k * sub,
+    ops: 1,
+    note: t(
+      `fact(${k}) = ${k} × fact(${k - 1}) = ${k} × ${sub} = ${k * sub} (1 multiplication).`,
+      `fact(${k}) = ${k} × fact(${k - 1}) = ${k} × ${sub} = ${k * sub} (1 multiplication).`,
+    ),
+  }),
 };
 
 export const SCAN_VALUES = [4, 9, 2, 7, 11, 5, 8];
@@ -111,39 +119,56 @@ export const FAMILY: TNode = {
 
 /* ---------- practice questions with fresh numbers ---------- */
 
+const PRACTICE = t('Practice', 'Entraînement');
+
 export const forCountQ = (a: number, n: number): QuestionStep => ({
   kind: 'number',
-  title: 'Practice',
-  body: `How many times does the inside of \`for i ← ${a} to ${n} do\` run?`,
+  title: PRACTICE,
+  body: t(
+    `How many times does the inside of \`for i ← ${a} to ${n} do\` run?`,
+    `Combien de fois l’intérieur de \`for i ← ${a} to ${n} do\` s’exécute-t-il ?`,
+  ),
   answer: n - a + 1,
-  hint: 'Count the values of $i$: from the first to the last, both included. That is last − first + 1.',
-  explain: `$i$ takes the values $${a}, ${a + 1}, \\dots, ${n}$: that is $${n} - ${a} + 1 = ${n - a + 1}$ values.`,
+  hint: t(
+    'Count the values of $i$: from the first to the last, both included. That is last − first + 1.',
+    'Comptez les valeurs de $i$ : de la première à la dernière, toutes deux comprises. Cela fait dernière − première + 1.',
+  ),
+  explain: t(
+    `$i$ takes the values $${a}, ${a + 1}, \\dots, ${n}$: that is $${n} - ${a} + 1 = ${n - a + 1}$ values.`,
+    `$i$ prend les valeurs $${a}, ${a + 1}, \\dots, ${n}$ : cela fait $${n} - ${a} + 1 = ${n - a + 1}$ valeurs.`,
+  ),
 });
 
 export const powerQ = (k: number): QuestionStep => ({
   kind: 'number',
-  title: 'Practice',
-  body: `Compute $2^{${k}}$.`,
+  title: PRACTICE,
+  body: t(`Compute $2^{${k}}$.`, `Calculez $2^{${k}}$.`),
   answer: 2 ** k,
-  hint: 'Start from 1 and double it, once per unit of the exponent.',
-  explain: `$1 \\to 2 \\to 4 \\to \\dots$, doubling ${k} times: $2^{${k}} = ${texNum(2 ** k)}$.`,
+  hint: t('Start from 1 and double it, once per unit of the exponent.', 'Partez de 1 et doublez, une fois par unité de l’exposant.'),
+  explain: t(
+    `$1 \\to 2 \\to 4 \\to \\dots$, doubling ${k} times: $2^{${k}} = ${texNum(2 ** k)}$.`,
+    `$1 \\to 2 \\to 4 \\to \\dots$, en doublant ${k} fois : $2^{${k}} = ${texNum(2 ** k)}$.`,
+  ),
 });
 
 export const logQ = (k: number): QuestionStep => ({
   kind: 'number',
-  title: 'Practice',
-  body: `Compute $\\log_2 ${texNum(2 ** k)}$.`,
+  title: PRACTICE,
+  body: t(`Compute $\\log_2 ${texNum(2 ** k)}$.`, `Calculez $\\log_2 ${texNum(2 ** k)}$.`),
   answer: k,
-  hint: `How many times can you halve ${2 ** k} before you reach 1?`,
-  explain: `$${texNum(2 ** k)} = 2^{${k}}$, so it takes ${k} halvings: $\\log_2 ${texNum(2 ** k)} = ${k}$.`,
+  hint: t(`How many times can you halve ${2 ** k} before you reach 1?`, `Combien de fois peut-on diviser ${2 ** k} par deux avant d’atteindre 1 ?`),
+  explain: t(
+    `$${texNum(2 ** k)} = 2^{${k}}$, so it takes ${k} halvings: $\\log_2 ${texNum(2 ** k)} = ${k}$.`,
+    `$${texNum(2 ** k)} = 2^{${k}}$, il faut donc ${k} divisions par deux : $\\log_2 ${texNum(2 ** k)} = ${k}$.`,
+  ),
 });
 
 export const gaussQ = (n: number): QuestionStep => ({
   kind: 'number',
-  title: 'Practice',
-  body: `Compute $1 + 2 + 3 + \\dots + ${n}$.`,
+  title: PRACTICE,
+  body: t(`Compute $1 + 2 + 3 + \\dots + ${n}$.`, `Calculez $1 + 2 + 3 + \\dots + ${n}$.`),
   answer: (n * (n + 1)) / 2,
-  hint: 'Use the staircase picture: $\\dfrac{n(n+1)}{2}$.',
+  hint: t('Use the staircase picture: $\\dfrac{n(n+1)}{2}$.', 'Utilisez l’image de l’escalier : $\\dfrac{n(n+1)}{2}$.'),
   explain: `$\\dfrac{${n} \\times ${n + 1}}{2} = ${texNum((n * (n + 1)) / 2)}$.`,
 });
 
@@ -153,168 +178,253 @@ const theta = (p: number) => `$\\Theta(${p === 0 ? '1' : p === 1 ? 'n' : `n^${p}
 export const dominantQ = (terms: [number, number][]): QuestionStep => {
   const top = Math.max(...terms.map(([, p]) => p));
   const options = [0, 1, 2, 3].map(theta);
+  const sum = terms.map(([c, p]) => mono(c, p)).join(' + ');
   return {
     kind: 'choice',
-    title: 'Practice',
-    body: `A program makes $${terms.map(([c, p]) => mono(c, p)).join(' + ')}$ steps. What is its order of growth?`,
+    title: PRACTICE,
+    body: t(
+      `A program makes $${sum}$ steps. What is its order of growth?`,
+      `Un programme effectue $${sum}$ étapes. Quel est son ordre de croissance ?`,
+    ),
     options,
     answer: top,
-    hint: 'Keep only the term with the biggest power of $n$, then drop its number in front.',
-    explain: `For large $n$ the term with $n^{${top}}$ dwarfs the others, and the factor in front does not change how it grows: ${theta(top)}.`,
+    hint: t(
+      'Keep only the term with the biggest power of $n$, then drop its number in front.',
+      'Gardez seulement le terme avec la plus grande puissance de $n$, puis enlevez le nombre devant.',
+    ),
+    explain: t(
+      `For large $n$ the term with $n^{${top}}$ dwarfs the others, and the factor in front does not change how it grows: ${theta(top)}.`,
+      `Pour $n$ grand, le terme en $n^{${top}}$ écrase les autres, et le facteur devant ne change pas sa croissance : ${theta(top)}.`,
+    ),
   };
 };
 
 export const unrollQ = (n: number): QuestionStep => ({
   kind: 'number',
-  title: 'Practice',
-  body: `$M(n) = M(n-1) + 1$ and $M(1) = 0$. What is $M(${n})$?`,
+  title: PRACTICE,
+  body: t(`$M(n) = M(n-1) + 1$ and $M(1) = 0$. What is $M(${n})$?`, `$M(n) = M(n-1) + 1$ et $M(1) = 0$. Que vaut $M(${n})$ ?`),
   answer: n - 1,
-  hint: 'Each step down from $n$ to 1 adds 1. How many steps are there from 1 up to $n$?',
-  explain: `Going from $M(1)$ up to $M(${n})$ adds 1 exactly ${n - 1} times: $M(${n}) = ${n - 1}$. In general $M(n) = n - 1$.`,
+  hint: t(
+    'Each step down from $n$ to 1 adds 1. How many steps are there from 1 up to $n$?',
+    'Chaque pas de $n$ jusqu’à 1 ajoute 1. Combien de pas y a-t-il de 1 à $n$ ?',
+  ),
+  explain: t(
+    `Going from $M(1)$ up to $M(${n})$ adds 1 exactly ${n - 1} times: $M(${n}) = ${n - 1}$. In general $M(n) = n - 1$.`,
+    `Pour passer de $M(1)$ à $M(${n})$, on ajoute 1 exactement ${n - 1} fois : $M(${n}) = ${n - 1}$. En général $M(n) = n - 1$.`,
+  ),
 });
 
 /* ---------- lessons ---------- */
 
 const instructions: Lesson = {
   id: 'c0l1',
-  title: 'Reading instructions line by line',
-  summary: 'You can follow a short program by hand and count how many times a line runs.',
+  title: t('Reading instructions line by line', 'Lire des instructions ligne par ligne'),
+  summary: t(
+    'You can follow a short program by hand and count how many times a line runs.',
+    'Vous savez suivre un petit programme à la main et compter combien de fois une ligne s’exécute.',
+  ),
   warmup: true,
   steps: [
     {
       kind: 'read',
-      title: 'Boxes with names',
-      body: `An **algorithm** is a list of precise instructions, like a recipe. The lessons write them in a simple made-up language called **pseudo-code**, one instruction per line.
+      title: t('Boxes with names', 'Des boîtes avec un nom'),
+      body: t(
+        `An **algorithm** is a list of precise instructions, like a recipe. The lessons write them in a simple made-up language called **pseudo-code**, one instruction per line.
 
 A **variable** is a box with a name that holds a number. The arrow \`←\` puts a value in a box: \`x ← 5\` reads "x gets 5". The old value is thrown away.
 
 Lines run from top to bottom, one at a time.`,
-      widget: () => <CodeBlock lines={['x ← 5', 'y ← x + 1', 'x ← x × 2']} title="After these lines: x = 10, y = 6" />,
+        `Un **algorithme** est une liste d’instructions précises, comme une recette. Les leçons les écrivent dans un petit langage inventé appelé **pseudo-code**, une instruction par ligne. Comme les vrais langages de programmation, il utilise quelques mots anglais : \`if\` (si), \`else\` (sinon), \`for\` (pour), \`while\` (tant que), \`return\` (renvoyer).
+
+Une **variable** est une boîte portant un nom, qui contient un nombre. La flèche \`←\` range une valeur dans une boîte : \`x ← 5\` se lit « x reçoit 5 ». L’ancienne valeur est perdue.
+
+Les lignes s’exécutent de haut en bas, une à la fois.`,
+      ),
+      widget: () => <CodeBlock lines={['x ← 5', 'y ← x + 1', 'x ← x × 2']} title={t('After these lines: x = 10, y = 6', 'Après ces lignes : x = 10, y = 6')} />,
     },
     {
       kind: 'number',
-      body: 'Run these lines in your head. What is in `x` at the end?',
+      body: t('Run these lines in your head. What is in `x` at the end?', 'Exécutez ces lignes de tête. Que contient `x` à la fin ?'),
       widget: () => <CodeBlock lines={['x ← 3', 'y ← x + 4', 'x ← y × 2']} />,
       answer: 14,
-      hint: 'After line 1, x = 3. Line 2 puts 3 + 4 in y. Line 3 uses y.',
-      explain: '`x ← 3`, then `y ← 7`, then `x ← 7 × 2 = 14`. The first value of x is gone.',
+      hint: t('After line 1, x = 3. Line 2 puts 3 + 4 in y. Line 3 uses y.', 'Après la ligne 1, x = 3. La ligne 2 range 3 + 4 dans y. La ligne 3 utilise y.'),
+      explain: t(
+        '`x ← 3`, then `y ← 7`, then `x ← 7 × 2 = 14`. The first value of x is gone.',
+        '`x ← 3`, puis `y ← 7`, puis `x ← 7 × 2 = 14`. La première valeur de x a disparu.',
+      ),
     },
     {
       kind: 'read',
-      title: 'Choosing with if',
-      body: '`if` tests a condition. When it is true, the indented lines under it run; otherwise the lines under `else` run. Indentation (the shift to the right) shows which lines belong to what.',
+      title: t('Choosing with if', 'Choisir avec if'),
+      body: t(
+        '`if` tests a condition. When it is true, the indented lines under it run; otherwise the lines under `else` run. Indentation (the shift to the right) shows which lines belong to what.',
+        '`if` teste une condition. Si elle est vraie, les lignes indentées en dessous s’exécutent ; sinon, ce sont les lignes sous `else`. L’indentation (le décalage vers la droite) montre quelles lignes appartiennent à quoi.',
+      ),
       widget: () => <CodeBlock lines={['if a > 10', '    b ← 1', 'else', '    b ← 2']} />,
     },
     {
       kind: 'number',
-      body: 'With `a ← 7` before the code above, what is in `b` at the end?',
+      body: t('With `a ← 7` before the code above, what is in `b` at the end?', 'Avec `a ← 7` avant le code ci-dessus, que contient `b` à la fin ?'),
       answer: 2,
-      hint: 'Is 7 greater than 10?',
-      explain: '$7 > 10$ is false, so the `else` line runs: b = 2.',
+      hint: t('Is 7 greater than 10?', '7 est-il plus grand que 10 ?'),
+      explain: t('$7 > 10$ is false, so the `else` line runs: b = 2.', '$7 > 10$ est faux, c’est donc la ligne du `else` qui s’exécute : b = 2.'),
     },
     {
       kind: 'read',
-      title: 'Repeating with for',
-      body: `\`for i ← 1 to n do\` repeats the indented lines once for each value $i = 1, 2, 3, \\dots, n$. Each repetition is called an **iteration**.
+      title: t('Repeating with for', 'Répéter avec for'),
+      body: t(
+        `\`for i ← 1 to n do\` repeats the indented lines once for each value $i = 1, 2, 3, \\dots, n$. Each repetition is called an **iteration**.
 
 Press **Step** to run the program one line at a time and watch the boxes $i$ and $S$. Then move the slider to change $n$.`,
-      widget: () => <TraceRunner program={sumProgram} nRange={[1, 8]} initialN={4} inputName="n" opName="addition" />,
+        `\`for i ← 1 to n do\` répète les lignes indentées une fois pour chaque valeur $i = 1, 2, 3, \\dots, n$. Chaque répétition s’appelle une **itération**.
+
+Appuyez sur **Pas** pour exécuter le programme ligne par ligne et observez les boîtes $i$ et $S$. Puis déplacez le curseur pour changer $n$.`,
+      ),
+      widget: () => <TraceRunner program={sumProgram} nRange={[1, 8]} initialN={4} inputName="n" opName={t('addition', 'addition')} />,
     },
     {
       kind: 'number',
-      body: 'What does the program return for $n = 5$?',
+      body: t('What does the program return for $n = 5$?', 'Que renvoie le programme pour $n = 5$ ?'),
       answer: 15,
-      hint: 'It adds $i$ to $S$ for every $i$ from 1 to 5.',
+      hint: t('It adds $i$ to $S$ for every $i$ from 1 to 5.', 'Il ajoute $i$ à $S$ pour chaque $i$ de 1 à 5.'),
       explain: '$S = 1 + 2 + 3 + 4 + 5 = 15$.',
     },
     {
       kind: 'number',
-      body: 'For $n = 5$, how many times does the line `S ← S + i` run?',
+      body: t('For $n = 5$, how many times does the line `S ← S + i` run?', 'Pour $n = 5$, combien de fois la ligne `S ← S + i` s’exécute-t-elle ?'),
       answer: 5,
-      explain: 'Once per value of $i$: 5 times. For any $n$, it runs $n$ times.',
+      explain: t('Once per value of $i$: 5 times. For any $n$, it runs $n$ times.', 'Une fois par valeur de $i$ : 5 fois. Pour un $n$ quelconque, elle s’exécute $n$ fois.'),
     },
     { kind: 'generated', make: (r) => forCountQ(r.int(2, 6), r.int(10, 40)) },
     {
       kind: 'read',
-      title: 'Repeating with while',
-      body: '`while condition` repeats its lines **as long as** the condition is true, testing it before each iteration. Nothing counts for you: the program changes its own counter. Here `i` jumps by 2.',
-      widget: () => <TraceRunner program={stepTwoProgram} nRange={[1, 12]} initialN={7} inputName="n" opName="jump" />,
+      title: t('Repeating with while', 'Répéter avec while'),
+      body: t(
+        '`while condition` repeats its lines **as long as** the condition is true, testing it before each iteration. Nothing counts for you: the program changes its own counter. Here `i` jumps by 2.',
+        '`while condition` répète ses lignes **tant que** la condition est vraie, en la testant avant chaque itération. Rien ne compte à votre place : le programme modifie lui-même son compteur. Ici `i` avance de 2 en 2.',
+      ),
+      widget: () => <TraceRunner program={stepTwoProgram} nRange={[1, 12]} initialN={7} inputName="n" opName={t('jump', 'saut')} />,
     },
     {
       kind: 'number',
-      body: 'For $n = 9$, how many times does `i ← i + 2` run?',
+      body: t('For $n = 9$, how many times does `i ← i + 2` run?', 'Pour $n = 9$, combien de fois `i ← i + 2` s’exécute-t-il ?'),
       answer: 5,
-      hint: '`i` takes the values 1, 3, 5, … The loop stops as soon as `i` is bigger than 9.',
-      explain: 'It runs with $i = 1, 3, 5, 7, 9$ — 5 times — then $i = 11 > 9$ stops the loop. About $n/2$ times.',
+      hint: t(
+        '`i` takes the values 1, 3, 5, … The loop stops as soon as `i` is bigger than 9.',
+        '`i` prend les valeurs 1, 3, 5, … La boucle s’arrête dès que `i` dépasse 9.',
+      ),
+      explain: t(
+        'It runs with $i = 1, 3, 5, 7, 9$ — 5 times — then $i = 11 > 9$ stops the loop. About $n/2$ times.',
+        'Elle s’exécute avec $i = 1, 3, 5, 7, 9$ — 5 fois — puis $i = 11 > 9$ arrête la boucle. Environ $n/2$ fois.',
+      ),
     },
     {
       kind: 'read',
-      title: 'A loop inside a loop',
-      body: 'Loops can be **nested**: the inner loop runs completely, from start to end, for **each** iteration of the outer loop. Step through it with $n = 3$.',
-      widget: () => <TraceRunner program={gridProgram} nRange={[1, 6]} initialN={3} inputName="n" opName="count" />,
+      title: t('A loop inside a loop', 'Une boucle dans une boucle'),
+      body: t(
+        'Loops can be **nested**: the inner loop runs completely, from start to end, for **each** iteration of the outer loop. Step through it with $n = 3$.',
+        'Les boucles peuvent être **imbriquées** : la boucle intérieure s’exécute en entier, du début à la fin, pour **chaque** itération de la boucle extérieure. Suivez-la pas à pas avec $n = 3$.',
+      ),
+      widget: () => <TraceRunner program={gridProgram} nRange={[1, 6]} initialN={3} inputName="n" opName={t('count', 'comptage')} />,
     },
     {
       kind: 'number',
-      body: 'For $n = 10$, how many times does `count ← count + 1` run?',
+      body: t('For $n = 10$, how many times does `count ← count + 1` run?', 'Pour $n = 10$, combien de fois `count ← count + 1` s’exécute-t-il ?'),
       answer: 100,
-      hint: 'For each of the 10 values of $i$, the inner loop runs 10 times.',
-      explain: '$10 \\times 10 = 100$. In general $n \\times n = n^2$.',
+      hint: t('For each of the 10 values of $i$, the inner loop runs 10 times.', 'Pour chacune des 10 valeurs de $i$, la boucle intérieure tourne 10 fois.'),
+      explain: t('$10 \\times 10 = 100$. In general $n \\times n = n^2$.', '$10 \\times 10 = 100$. En général $n \\times n = n^2$.'),
     },
     {
       kind: 'choice',
-      title: 'Why count?',
-      body: 'Algorithm analysis measures speed by counting how many times the busiest line runs, as a formula in $n$ (the size of the input). Why count lines instead of timing the program with a stopwatch?',
-      options: [
-        'Counting is more fun',
-        'A count does not depend on the computer, so it compares algorithms fairly and predicts what happens for big $n$',
-        'A stopwatch cannot measure programs',
-      ],
+      title: t('Why count?', 'Pourquoi compter ?'),
+      body: t(
+        'Algorithm analysis measures speed by counting how many times the busiest line runs, as a formula in $n$ (the size of the input). Why count lines instead of timing the program with a stopwatch?',
+        'L’analyse d’algorithmes mesure la vitesse en comptant combien de fois la ligne la plus sollicitée s’exécute, sous forme de formule en $n$ (la taille de l’entrée). Pourquoi compter des lignes plutôt que chronométrer le programme ?',
+      ),
+      options: t(
+        [
+          'Counting is more fun',
+          'A count does not depend on the computer, so it compares algorithms fairly and predicts what happens for big $n$',
+          'A stopwatch cannot measure programs',
+        ],
+        [
+          'Compter est plus amusant',
+          'Un comptage ne dépend pas de l’ordinateur : il compare les algorithmes équitablement et prédit ce qui se passe pour $n$ grand',
+          'Un chronomètre ne peut pas mesurer un programme',
+        ],
+      ),
       answer: 1,
-      explain: 'A faster computer changes the seconds but not the count. The formula ($n$, $n^2$, …) tells you how the work grows when the input grows — the main question of this app.',
+      explain: t(
+        'A faster computer changes the seconds but not the count. The formula ($n$, $n^2$, …) tells you how the work grows when the input grows — the main question of this app.',
+        'Un ordinateur plus rapide change les secondes mais pas le comptage. La formule ($n$, $n^2$, …) dit comment le travail augmente quand l’entrée grandit — la question centrale de cette appli.',
+      ),
     },
   ],
 };
 
 const rows: Lesson = {
   id: 'c0l2',
-  title: 'Rows of numbers',
-  summary: 'You can read array notation and find the largest value with one pass.',
+  title: t('Rows of numbers', 'Des rangées de nombres'),
+  summary: t(
+    'You can read array notation and find the largest value with one pass.',
+    'Vous savez lire la notation des tableaux et trouver la plus grande valeur en un seul passage.',
+  ),
   warmup: true,
   steps: [
     {
       kind: 'read',
-      title: 'Arrays',
-      body: `An **array** is a row of boxes holding values. The boxes are numbered from **0**: this number is the **index**. $A[i]$ means "the value in box $i$ of array $A$".
+      title: t('Arrays', 'Les tableaux'),
+      body: t(
+        `An **array** is a row of boxes holding values. The boxes are numbered from **0**: this number is the **index**. $A[i]$ means "the value in box $i$ of array $A$".
 
 An array of $n$ values is written $A[0..n-1]$: the first box is $A[0]$ and the **last is $A[n-1]$**, not $A[n]$.`,
+        `Un **tableau** est une rangée de cases contenant des valeurs. Les cases sont numérotées à partir de **0** : ce numéro est l’**indice**. $A[i]$ signifie « la valeur de la case $i$ du tableau $A$ ».
+
+Un tableau de $n$ valeurs s’écrit $A[0..n-1]$ : la première case est $A[0]$ et la **dernière est $A[n-1]$**, pas $A[n]$.`,
+      ),
       widget: () => <ArrayRow items={[7, 2, 9, 4, 6].map((v, i) => ({ id: i, label: v }))} showIndex />,
     },
     {
       kind: 'number',
-      body: 'In the array above, what is $A[2]$?',
+      body: t('In the array above, what is $A[2]$?', 'Dans le tableau ci-dessus, que vaut $A[2]$ ?'),
       answer: 9,
-      hint: 'The small numbers above the boxes are the indexes. Start counting at 0.',
+      hint: t(
+        'The small numbers above the boxes are the indexes. Start counting at 0.',
+        'Les petits nombres au-dessus des cases sont les indices. Commencez à compter à 0.',
+      ),
       explain: '$A[0] = 7$, $A[1] = 2$, $A[2] = 9$.',
     },
     {
       kind: 'number',
-      body: 'An array holds $n = 12$ values. What is the index of the last one?',
+      body: t('An array holds $n = 12$ values. What is the index of the last one?', 'Un tableau contient $n = 12$ valeurs. Quel est l’indice de la dernière ?'),
       answer: 11,
-      explain: 'Indexes run from 0 to $n - 1 = 11$.',
+      explain: t('Indexes run from 0 to $n - 1 = 11$.', 'Les indices vont de 0 à $n - 1 = 11$.'),
     },
     {
       kind: 'number',
-      body: 'How many values are in the part $A[3..8]$ (boxes 3 to 8, both included)?',
+      body: t(
+        'How many values are in the part $A[3..8]$ (boxes 3 to 8, both included)?',
+        'Combien de valeurs contient la partie $A[3..8]$ (cases 3 à 8, toutes deux comprises) ?',
+      ),
       answer: 6,
-      hint: 'Last − first + 1.',
-      explain: '$8 - 3 + 1 = 6$ boxes: 3, 4, 5, 6, 7, 8. This "+1" comes back again and again.',
+      hint: t('Last − first + 1.', 'Dernière − première + 1.'),
+      explain: t(
+        '$8 - 3 + 1 = 6$ boxes: 3, 4, 5, 6, 7, 8. This "+1" comes back again and again.',
+        '$8 - 3 + 1 = 6$ cases : 3, 4, 5, 6, 7, 8. Ce « +1 » reviendra sans cesse.',
+      ),
     },
     {
       kind: 'task',
-      title: 'Find the largest',
-      body: 'To find the largest value, walk along the array once and keep the **best so far**. Step through it to the end.',
+      title: t('Find the largest', 'Trouver le plus grand'),
+      body: t(
+        'To find the largest value, walk along the array once and keep the **best so far**. Step through it to the end.',
+        'Pour trouver la plus grande valeur, parcourez le tableau une fois en gardant le **meilleur jusqu’ici**. Avancez pas à pas jusqu’au bout.',
+      ),
       widget: ({ onSolved }) => <ArrayScan values={SCAN_VALUES} onSolved={onSolved} />,
-      success: 'One pass, comparing each new value with the best so far: $n - 1$ comparisons for $n$ values.',
+      success: t(
+        'One pass, comparing each new value with the best so far: $n - 1$ comparisons for $n$ values.',
+        'Un seul passage, en comparant chaque nouvelle valeur au meilleur jusqu’ici : $n - 1$ comparaisons pour $n$ valeurs.',
+      ),
     },
     {
       kind: 'generated',
@@ -322,111 +432,187 @@ An array of $n$ values is written $A[0..n-1]$: the first box is $A[0]$ and the *
         const n = r.int(8, 60);
         return {
           kind: 'number',
-          title: 'Practice',
-          body: `How many comparisons does that pass make on an array of $n = ${n}$ values?`,
+          title: PRACTICE,
+          body: t(
+            `How many comparisons does that pass make on an array of $n = ${n}$ values?`,
+            `Combien de comparaisons ce passage fait-il sur un tableau de $n = ${n}$ valeurs ?`,
+          ),
           answer: n - 1,
-          hint: 'The first value is the starting best; every other value is compared once.',
-          explain: `Every value except the first is compared once: $n - 1 = ${n - 1}$.`,
+          hint: t(
+            'The first value is the starting best; every other value is compared once.',
+            'La première valeur est le meilleur de départ ; chaque autre valeur est comparée une fois.',
+          ),
+          explain: t(
+            `Every value except the first is compared once: $n - 1 = ${n - 1}$.`,
+            `Chaque valeur sauf la première est comparée une fois : $n - 1 = ${n - 1}$.`,
+          ),
         };
       },
     },
     {
       kind: 'choice',
-      body: 'Could a cleverer method find the largest of $n$ values with fewer than $n - 1$ comparisons?',
-      options: [
-        'Yes, by comparing the first and last values only',
-        'No: every value except the largest must lose at least one comparison, and one comparison has only one loser',
-        'Yes, with $n/2$ comparisons',
-      ],
+      body: t(
+        'Could a cleverer method find the largest of $n$ values with fewer than $n - 1$ comparisons?',
+        'Une méthode plus astucieuse pourrait-elle trouver le plus grand de $n$ valeurs avec moins de $n - 1$ comparaisons ?',
+      ),
+      options: t(
+        [
+          'Yes, by comparing the first and last values only',
+          'No: every value except the largest must lose at least one comparison, and one comparison has only one loser',
+          'Yes, with $n/2$ comparisons',
+        ],
+        [
+          'Oui, en comparant seulement la première et la dernière valeur',
+          'Non : chaque valeur sauf la plus grande doit perdre au moins une comparaison, et une comparaison n’a qu’un perdant',
+          'Oui, avec $n/2$ comparaisons',
+        ],
+      ),
       answer: 1,
-      explain: 'If some value never lost a comparison, it could still be the largest. $n - 1$ values must each lose once, so at least $n - 1$ comparisons are needed. This kind of "at least" argument is called a **lower bound**.',
+      explain: t(
+        'If some value never lost a comparison, it could still be the largest. $n - 1$ values must each lose once, so at least $n - 1$ comparisons are needed. This kind of "at least" argument is called a **lower bound**.',
+        'Si une valeur n’a jamais perdu de comparaison, elle pourrait encore être la plus grande. $n - 1$ valeurs doivent perdre une fois chacune : il faut donc au moins $n - 1$ comparaisons. Ce genre d’argument « au moins » s’appelle une **borne inférieure**.',
+      ),
     },
     {
       kind: 'choice',
-      title: 'Sorted arrays',
-      body: 'An array is **sorted** when its values go up from left to right. Which one is sorted?',
+      title: t('Sorted arrays', 'Les tableaux triés'),
+      body: t(
+        'An array is **sorted** when its values go up from left to right. Which one is sorted?',
+        'Un tableau est **trié** quand ses valeurs augmentent de gauche à droite. Lequel est trié ?',
+      ),
       options: ['3 8 5 9 12', '2 4 4 7 10', '10 7 4 2 1', '1 3 2 4 5'],
       answer: 1,
-      explain: '2 ≤ 4 ≤ 4 ≤ 7 ≤ 10: equal neighbours are allowed. (10 7 4 2 1 is sorted in decreasing order.) Many lessons sort first, because a sorted array is much faster to search.',
+      explain: t(
+        '2 ≤ 4 ≤ 4 ≤ 7 ≤ 10: equal neighbours are allowed. (10 7 4 2 1 is sorted in decreasing order.) Many lessons sort first, because a sorted array is much faster to search.',
+        '2 ≤ 4 ≤ 4 ≤ 7 ≤ 10 : des voisins égaux sont permis. (10 7 4 2 1 est trié par ordre décroissant.) Beaucoup de leçons commencent par trier, car on cherche bien plus vite dans un tableau trié.',
+      ),
     },
   ],
 };
 
 const powers: Lesson = {
   id: 'c0l3',
-  title: 'Doubling and halving',
-  summary: 'You can compute powers of two and logarithms, and round up or down.',
+  title: t('Doubling and halving', 'Doubler et diviser par deux'),
+  summary: t(
+    'You can compute powers of two and logarithms, and round up or down.',
+    'Vous savez calculer des puissances de deux et des logarithmes, et arrondir vers le haut ou vers le bas.',
+  ),
   warmup: true,
   steps: [
     {
       kind: 'read',
-      title: 'Powers',
-      body: `$2^k$ ("2 to the power $k$") is 2 multiplied by itself $k$ times: $2^3 = 2 \\times 2 \\times 2 = 8$. By convention $2^0 = 1$. Each extra unit of $k$ **doubles** the value:
+      title: t('Powers', 'Les puissances'),
+      body: t(
+        `$2^k$ ("2 to the power $k$") is 2 multiplied by itself $k$ times: $2^3 = 2 \\times 2 \\times 2 = 8$. By convention $2^0 = 1$. Each extra unit of $k$ **doubles** the value:
 
 $$1,\\ 2,\\ 4,\\ 8,\\ 16,\\ 32,\\ 64,\\ 128,\\ 256,\\ 512,\\ 1024$$
 
 Likewise $n^2 = n \\times n$ ("n squared") and $n^3 = n \\times n \\times n$ ("n cubed").`,
+        `$2^k$ (« 2 puissance $k$ ») est 2 multiplié par lui-même $k$ fois : $2^3 = 2 \\times 2 \\times 2 = 8$. Par convention $2^0 = 1$. Chaque unité de plus pour $k$ **double** la valeur :
+
+$$1,\\ 2,\\ 4,\\ 8,\\ 16,\\ 32,\\ 64,\\ 128,\\ 256,\\ 512,\\ 1024$$
+
+De même $n^2 = n \\times n$ (« n au carré ») et $n^3 = n \\times n \\times n$ (« n au cube »).`,
+      ),
     },
     { kind: 'generated', make: (r) => powerQ(r.int(4, 12)) },
     {
       kind: 'number',
-      body: 'Compute $5^2 + 2^5$.',
+      body: t('Compute $5^2 + 2^5$.', 'Calculez $5^2 + 2^5$.'),
       answer: 57,
-      hint: 'They are different: $5^2 = 5 \\times 5$ and $2^5 = 2 \\times 2 \\times 2 \\times 2 \\times 2$.',
-      explain: '$25 + 32 = 57$. Swapping base and exponent changes everything.',
+      hint: t(
+        'They are different: $5^2 = 5 \\times 5$ and $2^5 = 2 \\times 2 \\times 2 \\times 2 \\times 2$.',
+        'Ils sont différents : $5^2 = 5 \\times 5$ et $2^5 = 2 \\times 2 \\times 2 \\times 2 \\times 2$.',
+      ),
+      explain: t('$25 + 32 = 57$. Swapping base and exponent changes everything.', '$25 + 32 = 57$. Échanger la base et l’exposant change tout.'),
     },
     {
       kind: 'read',
-      title: 'Logarithms: counting halvings',
-      body: `The **logarithm** $\\log_2 n$ answers the question: *how many times can I halve $n$ before reaching 1?* It undoes the power: $\\log_2 2^k = k$, so $\\log_2 8 = 3$ and $\\log_2 1024 = 10$.
+      title: t('Logarithms: counting halvings', 'Les logarithmes : compter les divisions par deux'),
+      body: t(
+        `The **logarithm** $\\log_2 n$ answers the question: *how many times can I halve $n$ before reaching 1?* It undoes the power: $\\log_2 2^k = k$, so $\\log_2 8 = 3$ and $\\log_2 1024 = 10$.
 
 When $n$ is not a power of two, $\\log_2 n$ is not a whole number. Move the slider: the halvings (dropping any ½) give the whole part.`,
+        `Le **logarithme** $\\log_2 n$ répond à la question : *combien de fois puis-je diviser $n$ par deux avant d’atteindre 1 ?* Il défait la puissance : $\\log_2 2^k = k$, donc $\\log_2 8 = 3$ et $\\log_2 1024 = 10$.
+
+Quand $n$ n’est pas une puissance de deux, $\\log_2 n$ n’est pas un nombre entier. Déplacez le curseur : les divisions par deux (en laissant tomber les ½) donnent la partie entière.`,
+      ),
       widget: () => <HalvingLadder />,
     },
     { kind: 'generated', make: (r) => logQ(r.int(3, 12)) },
     {
       kind: 'number',
-      body: 'Halving and dropping any ½, how many halvings take 100 down to 1?',
+      body: t(
+        'Halving and dropping any ½, how many halvings take 100 down to 1?',
+        'En divisant par deux et en laissant tomber les ½, combien de divisions mènent 100 jusqu’à 1 ?',
+      ),
       answer: 6,
-      hint: 'Use the slider, or do it: 100 → 50 → 25 → …',
-      explain: '100 → 50 → 25 → 12 → 6 → 3 → 1: six halvings. Indeed $2^6 = 64 \\le 100 < 128 = 2^7$, so $\\log_2 100 \\approx 6.64$.',
+      hint: t('Use the slider, or do it: 100 → 50 → 25 → …', 'Utilisez le curseur, ou faites-le : 100 → 50 → 25 → …'),
+      explain: t(
+        '100 → 50 → 25 → 12 → 6 → 3 → 1: six halvings. Indeed $2^6 = 64 \\le 100 < 128 = 2^7$, so $\\log_2 100 \\approx 6.64$.',
+        '100 → 50 → 25 → 12 → 6 → 3 → 1 : six divisions. En effet $2^6 = 64 \\le 100 < 128 = 2^7$, donc $\\log_2 100 \\approx 6{,}64$.',
+      ),
     },
     {
       kind: 'read',
-      title: 'Rounding down and up',
-      body: `$\\lfloor x \\rfloor$ ("floor of $x$") rounds **down** to a whole number; $\\lceil x \\rceil$ ("ceiling of $x$") rounds **up**.
+      title: t('Rounding down and up', 'Arrondir vers le bas et vers le haut'),
+      body: t(
+        `$\\lfloor x \\rfloor$ ("floor of $x$") rounds **down** to a whole number; $\\lceil x \\rceil$ ("ceiling of $x$") rounds **up**.
 
 $$\\lfloor 3.7 \\rfloor = 3 \\qquad \\lceil 3.2 \\rceil = 4 \\qquad \\lfloor 5 \\rfloor = \\lceil 5 \\rceil = 5$$
 
 For instance, splitting 7 items in two gives halves of $\\lceil 7/2 \\rceil = 4$ and $\\lfloor 7/2 \\rfloor = 3$.`,
+        `$\\lfloor x \\rfloor$ (« partie entière inférieure de $x$ ») arrondit **vers le bas** à un nombre entier ; $\\lceil x \\rceil$ (« partie entière supérieure ») arrondit **vers le haut**.
+
+$$\\lfloor 3{,}7 \\rfloor = 3 \\qquad \\lceil 3{,}2 \\rceil = 4 \\qquad \\lfloor 5 \\rfloor = \\lceil 5 \\rceil = 5$$
+
+Par exemple, couper 7 objets en deux donne des moitiés de $\\lceil 7/2 \\rceil = 4$ et $\\lfloor 7/2 \\rfloor = 3$.`,
+      ),
     },
     {
       kind: 'number',
-      body: 'Compute $\\lceil \\log_2 100 \\rceil$.',
+      body: t('Compute $\\lceil \\log_2 100 \\rceil$.', 'Calculez $\\lceil \\log_2 100 \\rceil$.'),
       answer: 7,
-      hint: 'Find the first power of two that is at least 100.',
-      explain: '$2^6 = 64 < 100 \\le 128 = 2^7$, so $\\log_2 100$ is between 6 and 7 and rounds up to 7.',
+      hint: t('Find the first power of two that is at least 100.', 'Trouvez la première puissance de deux au moins égale à 100.'),
+      explain: t(
+        '$2^6 = 64 < 100 \\le 128 = 2^7$, so $\\log_2 100$ is between 6 and 7 and rounds up to 7.',
+        '$2^6 = 64 < 100 \\le 128 = 2^7$, donc $\\log_2 100$ est entre 6 et 7 et s’arrondit vers le haut à 7.',
+      ),
     },
     {
       kind: 'choice',
-      body: 'If you double $n$, what happens to $\\log_2 n$?',
-      options: ['It doubles', 'It goes up by 1', 'It stays the same', 'It is squared'],
+      body: t('If you double $n$, what happens to $\\log_2 n$?', 'Si vous doublez $n$, que devient $\\log_2 n$ ?'),
+      options: t(
+        ['It doubles', 'It goes up by 1', 'It stays the same', 'It is squared'],
+        ['Il double', 'Il augmente de 1', 'Il ne change pas', 'Il est élevé au carré'],
+      ),
       answer: 1,
-      hint: 'Doubling $n$ gives exactly one more halving before reaching 1.',
-      explain: '$\\log_2 (2n) = \\log_2 n + 1$. Even $n = 1\\,000\\,000$ has $\\log_2 n \\approx 20$: logarithms grow incredibly slowly — that is why "logarithmic" algorithms are so fast.',
+      hint: t(
+        'Doubling $n$ gives exactly one more halving before reaching 1.',
+        'Doubler $n$ donne exactement une division par deux de plus avant d’atteindre 1.',
+      ),
+      explain: t(
+        '$\\log_2 (2n) = \\log_2 n + 1$. Even $n = 1\\,000\\,000$ has $\\log_2 n \\approx 20$: logarithms grow incredibly slowly — that is why "logarithmic" algorithms are so fast.',
+        '$\\log_2 (2n) = \\log_2 n + 1$. Même pour $n = 1\\,000\\,000$, $\\log_2 n \\approx 20$ : les logarithmes croissent incroyablement lentement — c’est pourquoi les algorithmes « logarithmiques » sont si rapides.',
+      ),
     },
     {
       kind: 'read',
-      title: 'Factorials',
-      body: `$n!$ ("$n$ factorial") multiplies all whole numbers from 1 to $n$: $4! = 1 \\times 2 \\times 3 \\times 4 = 24$. It grows even faster than $2^n$:
+      title: t('Factorials', 'Les factorielles'),
+      body: t(
+        `$n!$ ("$n$ factorial") multiplies all whole numbers from 1 to $n$: $4! = 1 \\times 2 \\times 3 \\times 4 = 24$. It grows even faster than $2^n$:
 
 $$5! = 120 \\qquad 10! = 3\\,628\\,800 \\qquad 20! \\approx 2.4 \\times 10^{18}$$`,
+        `$n!$ (« factorielle $n$ ») multiplie tous les nombres entiers de 1 à $n$ : $4! = 1 \\times 2 \\times 3 \\times 4 = 24$. Elle croît encore plus vite que $2^n$ :
+
+$$5! = 120 \\qquad 10! = 3\\,628\\,800 \\qquad 20! \\approx 2{,}4 \\times 10^{18}$$`,
+      ),
     },
     {
       kind: 'number',
-      body: 'Compute $6!$.',
+      body: t('Compute $6!$.', 'Calculez $6!$.'),
       answer: 720,
-      hint: '$5! = 120$; multiply by 6.',
+      hint: t('$5! = 120$; multiply by 6.', '$5! = 120$ ; multipliez par 6.'),
       explain: '$6! = 6 \\times 5! = 6 \\times 120 = 720$.',
     },
   ],
@@ -434,76 +620,111 @@ $$5! = 120 \\qquad 10! = 3\\,628\\,800 \\qquad 20! \\approx 2.4 \\times 10^{18}$
 
 const sums: Lesson = {
   id: 'c0l4',
-  title: 'Adding many numbers at once',
-  summary: 'You can read Σ notation and add up 1 + 2 + … + n and 1 + 2 + 4 + … in one go.',
+  title: t('Adding many numbers at once', 'Additionner beaucoup de nombres d’un coup'),
+  summary: t(
+    'You can read Σ notation and add up 1 + 2 + … + n and 1 + 2 + 4 + … in one go.',
+    'Vous savez lire la notation Σ et calculer 1 + 2 + … + n et 1 + 2 + 4 + … d’un seul coup.',
+  ),
   warmup: true,
   steps: [
     {
       kind: 'read',
-      title: 'The Σ sign',
-      body: `Loops add up work, so analysis is full of long sums. The Greek letter **Σ** (capital sigma) is short for "add up":
+      title: t('The Σ sign', 'Le signe Σ'),
+      body: t(
+        `Loops add up work, so analysis is full of long sums. The Greek letter **Σ** (capital sigma) is short for "add up":
 
 $$\\sum_{i=1}^{5} i = 1 + 2 + 3 + 4 + 5$$
 
 Read it as: "for $i$ going from 1 (below) to 5 (above), add up $i$". The expression after Σ can be anything: $\\sum_{i=1}^{3} i^2 = 1 + 4 + 9$.`,
+        `Les boucles accumulent du travail, alors l’analyse est pleine de longues sommes. La lettre grecque **Σ** (sigma majuscule) veut dire « additionner » :
+
+$$\\sum_{i=1}^{5} i = 1 + 2 + 3 + 4 + 5$$
+
+Lisez : « pour $i$ allant de 1 (en bas) à 5 (en haut), additionner $i$ ». L’expression après Σ peut être n’importe quoi : $\\sum_{i=1}^{3} i^2 = 1 + 4 + 9$.`,
+      ),
     },
     {
       kind: 'number',
-      body: 'Compute $\\displaystyle\\sum_{i=1}^{4} i^2$.',
+      body: t('Compute $\\displaystyle\\sum_{i=1}^{4} i^2$.', 'Calculez $\\displaystyle\\sum_{i=1}^{4} i^2$.'),
       answer: 30,
-      hint: 'Write the four terms: $1^2 + 2^2 + 3^2 + 4^2$.',
+      hint: t('Write the four terms: $1^2 + 2^2 + 3^2 + 4^2$.', 'Écrivez les quatre termes : $1^2 + 2^2 + 3^2 + 4^2$.'),
       explain: '$1 + 4 + 9 + 16 = 30$.',
     },
     {
       kind: 'number',
-      body: 'How many terms does $\\displaystyle\\sum_{i=3}^{10} i$ have?',
+      body: t('How many terms does $\\displaystyle\\sum_{i=3}^{10} i$ have?', 'Combien de termes la somme $\\displaystyle\\sum_{i=3}^{10} i$ a-t-elle ?'),
       answer: 8,
-      hint: 'Last − first + 1, as with array parts.',
-      explain: '$i = 3, 4, \\dots, 10$: $10 - 3 + 1 = 8$ terms.',
+      hint: t('Last − first + 1, as with array parts.', 'Dernier − premier + 1, comme pour les parties de tableau.'),
+      explain: t('$i = 3, 4, \\dots, 10$: $10 - 3 + 1 = 8$ terms.', '$i = 3, 4, \\dots, 10$ : $10 - 3 + 1 = 8$ termes.'),
     },
     {
       kind: 'choice',
-      body: 'What is $\\displaystyle\\sum_{i=1}^{n} 3$? (The thing added does not depend on $i$.)',
+      body: t(
+        'What is $\\displaystyle\\sum_{i=1}^{n} 3$? (The thing added does not depend on $i$.)',
+        'Que vaut $\\displaystyle\\sum_{i=1}^{n} 3$ ? (Ce qu’on additionne ne dépend pas de $i$.)',
+      ),
       options: ['$3$', '$3n$', '$n + 3$', '$3^n$'],
       answer: 1,
-      explain: 'It adds 3, $n$ times: $3 + 3 + \\dots + 3 = 3n$. A loop that does 3 operations per iteration, $n$ times, costs $3n$.',
+      explain: t(
+        'It adds 3, $n$ times: $3 + 3 + \\dots + 3 = 3n$. A loop that does 3 operations per iteration, $n$ times, costs $3n$.',
+        'On ajoute 3, $n$ fois : $3 + 3 + \\dots + 3 = 3n$. Une boucle qui fait 3 opérations par itération, $n$ fois, coûte $3n$.',
+      ),
     },
     {
       kind: 'read',
-      title: 'The staircase trick',
-      body: 'To add $1 + 2 + \\dots + n$, put two copies of the staircase together, one upside down. They form a rectangle of $n$ columns, each $n + 1$ high:',
+      title: t('The staircase trick', 'L’astuce de l’escalier'),
+      body: t(
+        'To add $1 + 2 + \\dots + n$, put two copies of the staircase together, one upside down. They form a rectangle of $n$ columns, each $n + 1$ high:',
+        'Pour calculer $1 + 2 + \\dots + n$, accolez deux copies de l’escalier, l’une à l’envers. Elles forment un rectangle de $n$ colonnes, chacune de hauteur $n + 1$ :',
+      ),
       widget: () => <GaussPairs />,
     },
     {
       kind: 'read',
-      title: 'Remember this one',
-      body: `$$1 + 2 + \\dots + n = \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
+      title: t('Remember this one', 'À retenir'),
+      body: t(
+        `$$1 + 2 + \\dots + n = \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
 
 It appears whenever an inner loop runs 1 time, then 2 times, then 3 times… For large $n$ it is about $n^2/2$.`,
+        `$$1 + 2 + \\dots + n = \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
+
+Elle apparaît chaque fois qu’une boucle intérieure tourne 1 fois, puis 2 fois, puis 3 fois… Pour $n$ grand, elle vaut environ $n^2/2$.`,
+      ),
     },
     { kind: 'generated', make: (r) => gaussQ(r.int(10, 200)) },
     {
       kind: 'choice',
-      body: 'How many times does the innermost line run? The inner loop goes up to $i$, not $n$.',
+      body: t(
+        'How many times does the innermost line run? The inner loop goes up to $i$, not $n$.',
+        'Combien de fois la ligne la plus intérieure s’exécute-t-elle ? La boucle intérieure va jusqu’à $i$, pas $n$.',
+      ),
       widget: () => <CodeBlock lines={['for i ← 1 to n do', '    for j ← 1 to i do', '        count ← count + 1']} />,
       options: ['$n$', '$n^2$', '$\\dfrac{n(n+1)}{2}$', '$2n$'],
       answer: 2,
-      hint: 'For $i = 1$ the inner loop runs once, for $i = 2$ twice, …',
-      explain: '$1 + 2 + \\dots + n = \\dfrac{n(n+1)}{2}$: about half of the $n \\times n$ square.',
+      hint: t('For $i = 1$ the inner loop runs once, for $i = 2$ twice, …', 'Pour $i = 1$ la boucle intérieure tourne une fois, pour $i = 2$ deux fois, …'),
+      explain: t(
+        '$1 + 2 + \\dots + n = \\dfrac{n(n+1)}{2}$: about half of the $n \\times n$ square.',
+        '$1 + 2 + \\dots + n = \\dfrac{n(n+1)}{2}$ : environ la moitié du carré $n \\times n$.',
+      ),
     },
     {
       kind: 'read',
-      title: 'Doubling sums',
-      body: `A sum where every term doubles behaves very differently: each term is bigger than **all the previous ones together**. The bars fill the next power of two, minus the first term.
+      title: t('Doubling sums', 'Les sommes qui doublent'),
+      body: t(
+        `A sum where every term doubles behaves very differently: each term is bigger than **all the previous ones together**. The bars fill the next power of two, minus the first term.
 
 So $1 + 2 + 4 + \\dots + 2^k = 2^{k+1} - 1$: the total is less than twice the last term.`,
+        `Une somme dont chaque terme double se comporte très différemment : chaque terme est plus grand que **tous les précédents réunis**. Les barres remplissent la puissance de deux suivante, moins le premier terme.
+
+Donc $1 + 2 + 4 + \\dots + 2^k = 2^{k+1} - 1$ : le total est inférieur au double du dernier terme.`,
+      ),
       widget: () => <DoublingBars />,
     },
     {
       kind: 'number',
-      body: 'Compute $1 + 2 + 4 + 8 + 16 + 32 + 64$.',
+      body: t('Compute $1 + 2 + 4 + 8 + 16 + 32 + 64$.', 'Calculez $1 + 2 + 4 + 8 + 16 + 32 + 64$.'),
       answer: 127,
-      hint: 'The last term is $64 = 2^6$, so the total is $2^7 - 1$.',
+      hint: t('The last term is $64 = 2^6$, so the total is $2^7 - 1$.', 'Le dernier terme est $64 = 2^6$, donc le total vaut $2^7 - 1$.'),
       explain: '$2^7 - 1 = 128 - 1 = 127$.',
     },
   ],
@@ -511,44 +732,76 @@ So $1 + 2 + 4 + \\dots + 2^k = 2^{k+1} - 1$: the total is less than twice the la
 
 const growth: Lesson = {
   id: 'c0l5',
-  title: 'Fast, slow and hopeless',
-  summary: 'You can rank costs like n, n², 2ⁿ, keep the biggest term and read Θ, O and Ω.',
+  title: t('Fast, slow and hopeless', 'Rapide, lent et sans espoir'),
+  summary: t(
+    'You can rank costs like n, n², 2ⁿ, keep the biggest term and read Θ, O and Ω.',
+    'Vous savez classer des coûts comme n, n², 2ⁿ, garder le terme le plus grand et lire Θ, O et Ω.',
+  ),
   warmup: true,
   steps: [
     {
       kind: 'read',
-      title: 'What the formulas mean in seconds',
-      body: 'Suppose a computer does one billion simple steps per second. Here is how long algorithms of different costs take on an input of size $n$. Try every value of the slider.',
+      title: t('What the formulas mean in seconds', 'Ce que les formules veulent dire en secondes'),
+      body: t(
+        'Suppose a computer does one billion simple steps per second. Here is how long algorithms of different costs take on an input of size $n$. Try every value of the slider.',
+        'Supposons qu’un ordinateur fasse un milliard d’étapes simples par seconde. Voici le temps que prennent des algorithmes de coûts différents sur une entrée de taille $n$. Essayez toutes les valeurs du curseur.',
+      ),
       widget: () => <GrowthTable />,
     },
     {
       kind: 'choice',
-      body: 'For $n = 1\\,000\\,000$, which costs still finish within a second?',
-      options: ['Only $\\log_2 n$', '$\\log_2 n$, $n$ and $n \\log_2 n$', 'All except $n!$', 'All of them'],
+      body: t(
+        'For $n = 1\\,000\\,000$, which costs still finish within a second?',
+        'Pour $n = 1\\,000\\,000$, quels coûts terminent encore en moins d’une seconde ?',
+      ),
+      options: t(
+        ['Only $\\log_2 n$', '$\\log_2 n$, $n$ and $n \\log_2 n$', 'All except $n!$', 'All of them'],
+        ['Seulement $\\log_2 n$', '$\\log_2 n$, $n$ et $n \\log_2 n$', 'Tous sauf $n!$', 'Tous'],
+      ),
       answer: 1,
-      explain: '$n^2 = 10^{12}$ steps already takes about 17 minutes, and $n^3$ thousands of years. $n \\log_2 n \\approx 2 \\times 10^7$ steps: 20 ms.',
+      explain: t(
+        '$n^2 = 10^{12}$ steps already takes about 17 minutes, and $n^3$ thousands of years. $n \\log_2 n \\approx 2 \\times 10^7$ steps: 20 ms.',
+        '$n^2 = 10^{12}$ étapes prend déjà environ 17 minutes, et $n^3$ des milliers d’années. $n \\log_2 n \\approx 2 \\times 10^7$ étapes : 20 ms.',
+      ),
     },
     {
       kind: 'choice',
-      body: 'Which costs are hopeless already for $n = 100$?',
-      options: ['$n^2$ and $n^3$', '$2^n$ and $n!$', 'Only $n!$', 'None of them'],
+      body: t('Which costs are hopeless already for $n = 100$?', 'Quels coûts sont déjà sans espoir pour $n = 100$ ?'),
+      options: t(
+        ['$n^2$ and $n^3$', '$2^n$ and $n!$', 'Only $n!$', 'None of them'],
+        ['$n^2$ et $n^3$', '$2^n$ et $n!$', 'Seulement $n!$', 'Aucun'],
+      ),
       answer: 1,
-      explain: '$2^{100} \\approx 10^{30}$ steps: far longer than the age of the universe. Costs like $2^n$ and $n!$ appear when an algorithm tries every possibility.',
+      explain: t(
+        '$2^{100} \\approx 10^{30}$ steps: far longer than the age of the universe. Costs like $2^n$ and $n!$ appear when an algorithm tries every possibility.',
+        '$2^{100} \\approx 10^{30}$ étapes : bien plus long que l’âge de l’univers. Des coûts comme $2^n$ et $n!$ apparaissent quand un algorithme essaie toutes les possibilités.',
+      ),
     },
     {
       kind: 'sequence',
-      body: 'Order these costs from the **slowest-growing** to the **fastest-growing**.',
+      body: t(
+        'Order these costs from the **slowest-growing** to the **fastest-growing**.',
+        'Rangez ces coûts de celui qui **croît le plus lentement** à celui qui **croît le plus vite**.',
+      ),
       tokens: ['log₂ n', 'n', 'n log₂ n', 'n²', '2ⁿ', 'n!'],
       answer: ['log₂ n', 'n', 'n log₂ n', 'n²', '2ⁿ', 'n!'],
-      hint: 'Use the table for $n = 1000$.',
-      explain: 'This ladder is worth learning by heart: $\\log n \\ll n \\ll n \\log n \\ll n^2 \\ll 2^n \\ll n!$.',
+      hint: t('Use the table for $n = 1000$.', 'Utilisez le tableau pour $n = 1000$.'),
+      explain: t(
+        'This ladder is worth learning by heart: $\\log n \\ll n \\ll n \\log n \\ll n^2 \\ll 2^n \\ll n!$.',
+        'Cette échelle mérite d’être apprise par cœur : $\\log n \\ll n \\ll n \\log n \\ll n^2 \\ll 2^n \\ll n!$.',
+      ),
     },
     {
       kind: 'read',
-      title: 'Only the biggest term matters',
-      body: `A program making $3n^2 + 5n + 100$ steps: for small $n$ the 100 dominates, but soon $3n^2$ is almost everything. Move the slider to large $n$ and compare it with $3n^2$ alone.
+      title: t('Only the biggest term matters', 'Seul le plus grand terme compte'),
+      body: t(
+        `A program making $3n^2 + 5n + 100$ steps: for small $n$ the 100 dominates, but soon $3n^2$ is almost everything. Move the slider to large $n$ and compare it with $3n^2$ alone.
 
 We also ignore the **constant factor** (the 3): a computer twice as fast divides everything by 2 without changing how the cost **grows**. So we say this program is **of order $n^2$** and write $\\Theta(n^2)$ (read "theta of $n$ squared").`,
+        `Un programme qui fait $3n^2 + 5n + 100$ étapes : pour $n$ petit, le 100 domine, mais bientôt $3n^2$ représente presque tout. Poussez le curseur vers les grands $n$ et comparez avec $3n^2$ seul.
+
+On ignore aussi le **facteur constant** (le 3) : un ordinateur deux fois plus rapide divise tout par 2 sans changer la façon dont le coût **croît**. On dit donc que ce programme est **d’ordre $n^2$** et on écrit $\\Theta(n^2)$ (lire « thêta de $n$ carré »).`,
+      ),
       widget: () => (
         <GrowthPlot
           fns={[
@@ -562,10 +815,13 @@ We also ignore the **constant factor** (the 3): a computer twice as fast divides
     },
     {
       kind: 'choice',
-      body: 'What is the order of growth of $5n + 20$?',
+      body: t('What is the order of growth of $5n + 20$?', 'Quel est l’ordre de croissance de $5n + 20$ ?'),
       options: ['$\\Theta(1)$', '$\\Theta(n)$', '$\\Theta(5n)$', '$\\Theta(n^2)$'],
       answer: 1,
-      explain: 'Keep $5n$, drop the 5: $\\Theta(n)$. Writing $\\Theta(5n)$ is not wrong but never done — constants are always dropped.',
+      explain: t(
+        'Keep $5n$, drop the 5: $\\Theta(n)$. Writing $\\Theta(5n)$ is not wrong but never done — constants are always dropped.',
+        'On garde $5n$, on enlève le 5 : $\\Theta(n)$. Écrire $\\Theta(5n)$ n’est pas faux mais ne se fait jamais — on enlève toujours les constantes.',
+      ),
     },
     {
       kind: 'generated',
@@ -577,198 +833,324 @@ We also ignore the **constant factor** (the 3): a computer twice as fast divides
     },
     {
       kind: 'read',
-      title: 'Θ, O and Ω in plain words',
-      body: `Three symbols compare how two functions grow, ignoring constant factors and small $n$:
+      title: t('Θ, O and Ω in plain words', 'Θ, O et Ω avec des mots simples'),
+      body: t(
+        `Three symbols compare how two functions grow, ignoring constant factors and small $n$:
 
 - $f \\in \\Theta(g)$: $f$ grows **like** $g$ ("theta").
 - $f \\in O(g)$: $f$ grows **no faster** than $g$ ("big O") — $g$ is a ceiling.
 - $f \\in \\Omega(g)$: $f$ grows **at least as fast** as $g$ ("big omega") — $g$ is a floor.
 
 So $n \\in O(n^2)$ is true (a ceiling, just not a tight one), and $\\Theta$ means both $O$ and $\\Omega$ hold.`,
+        `Trois symboles comparent la croissance de deux fonctions, en ignorant les facteurs constants et les petits $n$ :
+
+- $f \\in \\Theta(g)$ : $f$ croît **comme** $g$ (« thêta »).
+- $f \\in O(g)$ : $f$ ne croît **pas plus vite** que $g$ (« grand O ») — $g$ est un plafond.
+- $f \\in \\Omega(g)$ : $f$ croît **au moins aussi vite** que $g$ (« grand oméga ») — $g$ est un plancher.
+
+Ainsi $n \\in O(n^2)$ est vrai (un plafond, simplement pas serré), et $\\Theta$ signifie que $O$ et $\\Omega$ sont vrais tous les deux.`,
+      ),
     },
     {
       kind: 'choice',
-      body: 'Which statement is **true**?',
+      body: t('Which statement is **true**?', 'Quelle affirmation est **vraie** ?'),
       options: ['$n^2 \\in O(n)$', '$n \\in \\Omega(n^2)$', '$n \\in O(n^2)$', '$n^2 \\in \\Theta(n)$'],
       answer: 2,
-      explain: '$n$ grows no faster than $n^2$, so $n \\in O(n^2)$. The others claim that $n^2$ grows no faster than $n$, in one form or another.',
+      explain: t(
+        '$n$ grows no faster than $n^2$, so $n \\in O(n^2)$. The others claim that $n^2$ grows no faster than $n$, in one form or another.',
+        '$n$ ne croît pas plus vite que $n^2$, donc $n \\in O(n^2)$. Les autres prétendent, sous une forme ou une autre, que $n^2$ ne croît pas plus vite que $n$.',
+      ),
     },
     {
       kind: 'choice',
-      title: 'The doubling test',
-      body: 'You can guess the order by doubling $n$: for $\\Theta(n)$ the time doubles, for $\\Theta(n^2)$ it is multiplied by $2^2 = 4$. A program takes **8 times longer** when $n$ doubles. What is its order?',
+      title: t('The doubling test', 'Le test du doublement'),
+      body: t(
+        'You can guess the order by doubling $n$: for $\\Theta(n)$ the time doubles, for $\\Theta(n^2)$ it is multiplied by $2^2 = 4$. A program takes **8 times longer** when $n$ doubles. What is its order?',
+        'On peut deviner l’ordre en doublant $n$ : pour $\\Theta(n)$ le temps double, pour $\\Theta(n^2)$ il est multiplié par $2^2 = 4$. Un programme prend **8 fois plus de temps** quand $n$ double. Quel est son ordre ?',
+      ),
       options: ['$\\Theta(n)$', '$\\Theta(n^2)$', '$\\Theta(n^3)$', '$\\Theta(2^n)$'],
       answer: 2,
       hint: '$(2n)^3 = 2^3 \\times n^3$.',
-      explain: '$8 = 2^3$, so $\\Theta(n^3)$. The next chapter uses this test on real loops.',
+      explain: t(
+        '$8 = 2^3$, so $\\Theta(n^3)$. The next chapter uses this test on real loops.',
+        '$8 = 2^3$, donc $\\Theta(n^3)$. Le chapitre suivant applique ce test à de vraies boucles.',
+      ),
     },
   ],
 };
 
 const recursion: Lesson = {
   id: 'c0l6',
-  title: 'Functions that call themselves',
-  summary: 'You can follow a recursive function, write its cost as a recurrence and unroll it.',
+  title: t('Functions that call themselves', 'Des fonctions qui s’appellent elles-mêmes'),
+  summary: t(
+    'You can follow a recursive function, write its cost as a recurrence and unroll it.',
+    'Vous savez suivre une fonction récursive, écrire son coût sous forme de récurrence et la dérouler.',
+  ),
   warmup: true,
   steps: [
     {
       kind: 'read',
-      title: 'A function that uses itself',
-      body: `A **function** is a named piece of code that takes an input and returns a result. A **recursive** function calls itself on a smaller input.
+      title: t('A function that uses itself', 'Une fonction qui se sert d’elle-même'),
+      body: t(
+        `A **function** is a named piece of code that takes an input and returns a result. A **recursive** function calls itself on a smaller input.
 
 $n! = n \\times (n-1)!$, so to compute \`fact(5)\` you can compute \`fact(4)\` and multiply by 5. The **base case** \`fact(1) = 1\` stops the chain.`,
+        `Une **fonction** est un morceau de code nommé qui prend une entrée et renvoie un résultat. Une fonction **récursive** s’appelle elle-même sur une entrée plus petite.
+
+$n! = n \\times (n-1)!$, donc pour calculer \`fact(5)\` on peut calculer \`fact(4)\` et multiplier par 5. Le **cas de base** \`fact(1) = 1\` arrête la chaîne.`,
+      ),
       widget: () => <CodeBlock lines={['fact(n):', '    if n = 1', '        return 1', '    return n × fact(n − 1)']} />,
     },
     {
       kind: 'task',
-      body: 'Each call waits for the smaller call to return. Step through the **call stack** until `fact(5)` gets its answer.',
-      widget: ({ onSolved }) => <CallChain spec={factSpec} initialN={5} maxN={8} opName="multiplications" onSolved={onSolved} />,
-      success: 'The calls go down to the base case, then the answers come back up: $5! = 120$ with 4 multiplications.',
+      body: t(
+        'Each call waits for the smaller call to return. Step through the **call stack** until `fact(5)` gets its answer.',
+        'Chaque appel attend que l’appel plus petit lui réponde. Avancez dans la **pile d’appels** jusqu’à ce que `fact(5)` obtienne sa réponse.',
+      ),
+      widget: ({ onSolved }) => <CallChain spec={factSpec} initialN={5} maxN={8} opName={t('multiplications', 'multiplications')} onSolved={onSolved} />,
+      success: t(
+        'The calls go down to the base case, then the answers come back up: $5! = 120$ with 4 multiplications.',
+        'Les appels descendent jusqu’au cas de base, puis les réponses remontent : $5! = 120$ avec 4 multiplications.',
+      ),
     },
     {
       kind: 'choice',
-      body: 'What happens if the base case is missing?',
-      options: [
-        'The function returns 0',
-        'It calls itself forever (in practice, until the computer runs out of memory for waiting calls)',
-        'It computes $n!$ anyway',
-      ],
+      body: t('What happens if the base case is missing?', 'Que se passe-t-il s’il manque le cas de base ?'),
+      options: t(
+        [
+          'The function returns 0',
+          'It calls itself forever (in practice, until the computer runs out of memory for waiting calls)',
+          'It computes $n!$ anyway',
+        ],
+        [
+          'La fonction renvoie 0',
+          'Elle s’appelle sans fin (en pratique, jusqu’à ce que l’ordinateur n’ait plus de mémoire pour les appels en attente)',
+          'Elle calcule $n!$ quand même',
+        ],
+      ),
       answer: 1,
-      explain: 'Without a base case nothing ever stops the chain of calls. Every recursive function needs one.',
+      explain: t(
+        'Without a base case nothing ever stops the chain of calls. Every recursive function needs one.',
+        'Sans cas de base, rien n’arrête jamais la chaîne d’appels. Toute fonction récursive en a besoin.',
+      ),
     },
     {
       kind: 'read',
-      title: 'Writing the cost as a recurrence',
-      body: `Let $M(n)$ be the number of multiplications made by \`fact(n)\`. The call makes **one** multiplication plus whatever \`fact(n − 1)\` makes:
+      title: t('Writing the cost as a recurrence', 'Écrire le coût sous forme de récurrence'),
+      body: t(
+        `Let $M(n)$ be the number of multiplications made by \`fact(n)\`. The call makes **one** multiplication plus whatever \`fact(n − 1)\` makes:
 
 $$M(n) = M(n-1) + 1, \\qquad M(1) = 0$$
 
 An equation that defines a function using its own smaller values is a **recurrence**. To solve it, **unroll** it — replace $M(n-1)$ by its own definition, again and again:
 
 $$M(n) = M(n-2) + 2 = M(n-3) + 3 = \\dots = M(1) + (n-1) = n - 1$$`,
+        `Notons $M(n)$ le nombre de multiplications faites par \`fact(n)\`. L’appel fait **une** multiplication, plus celles que fait \`fact(n − 1)\` :
+
+$$M(n) = M(n-1) + 1, \\qquad M(1) = 0$$
+
+Une équation qui définit une fonction à l’aide de ses propres valeurs plus petites est une **récurrence**. Pour la résoudre, on la **déroule** — on remplace $M(n-1)$ par sa propre définition, encore et encore :
+
+$$M(n) = M(n-2) + 2 = M(n-3) + 3 = \\dots = M(1) + (n-1) = n - 1$$`,
+      ),
     },
     { kind: 'generated', make: (r) => unrollQ(r.int(6, 50)) },
     {
       kind: 'choice',
-      body: 'A recursive function does $n$ steps of work and then calls itself on $n - 1$: $T(n) = T(n-1) + n$, $T(1) = 1$. What is $T(n)$?',
+      body: t(
+        'A recursive function does $n$ steps of work and then calls itself on $n - 1$: $T(n) = T(n-1) + n$, $T(1) = 1$. What is $T(n)$?',
+        'Une fonction récursive fait $n$ étapes de travail puis s’appelle sur $n - 1$ : $T(n) = T(n-1) + n$, $T(1) = 1$. Que vaut $T(n)$ ?',
+      ),
       options: ['$n$', '$2n$', '$\\dfrac{n(n+1)}{2}$', '$2^n$'],
       answer: 2,
-      hint: 'Unroll: $T(n) = n + (n-1) + (n-2) + \\dots$',
-      explain: '$T(n) = n + (n-1) + \\dots + 2 + 1 = \\dfrac{n(n+1)}{2}$ — the staircase sum, so $\\Theta(n^2)$.',
+      hint: t('Unroll: $T(n) = n + (n-1) + (n-2) + \\dots$', 'Déroulez : $T(n) = n + (n-1) + (n-2) + \\dots$'),
+      explain: t(
+        '$T(n) = n + (n-1) + \\dots + 2 + 1 = \\dfrac{n(n+1)}{2}$ — the staircase sum, so $\\Theta(n^2)$.',
+        '$T(n) = n + (n-1) + \\dots + 2 + 1 = \\dfrac{n(n+1)}{2}$ — la somme de l’escalier, donc $\\Theta(n^2)$.',
+      ),
     },
     {
       kind: 'read',
-      title: 'Calling on half',
-      body: `Some functions call themselves on **half** of the input. If each call does 1 step:
+      title: t('Calling on half', 'S’appeler sur la moitié'),
+      body: t(
+        `Some functions call themselves on **half** of the input. If each call does 1 step:
 
 $$T(n) = T(n/2) + 1, \\qquad T(1) = 0$$
 
 For $n = 16$: $16 \\to 8 \\to 4 \\to 2 \\to 1$, four calls of one step each, so $T(16) = 4 = \\log_2 16$. In general $T(n) = \\log_2 n$.`,
+        `Certaines fonctions s’appellent sur la **moitié** de l’entrée. Si chaque appel fait 1 étape :
+
+$$T(n) = T(n/2) + 1, \\qquad T(1) = 0$$
+
+Pour $n = 16$ : $16 \\to 8 \\to 4 \\to 2 \\to 1$, quatre appels d’une étape chacun, donc $T(16) = 4 = \\log_2 16$. En général $T(n) = \\log_2 n$.`,
+      ),
     },
     {
       kind: 'number',
-      body: 'With $T(n) = T(n/2) + 1$ and $T(1) = 0$, what is $T(64)$?',
+      body: t(
+        'With $T(n) = T(n/2) + 1$ and $T(1) = 0$, what is $T(64)$?',
+        'Avec $T(n) = T(n/2) + 1$ et $T(1) = 0$, que vaut $T(64)$ ?',
+      ),
       answer: 6,
-      hint: 'How many halvings from 64 to 1?',
-      explain: '$64 \\to 32 \\to 16 \\to 8 \\to 4 \\to 2 \\to 1$: 6 halvings, $T(64) = \\log_2 64 = 6$.',
+      hint: t('How many halvings from 64 to 1?', 'Combien de divisions par deux de 64 jusqu’à 1 ?'),
+      explain: t(
+        '$64 \\to 32 \\to 16 \\to 8 \\to 4 \\to 2 \\to 1$: 6 halvings, $T(64) = \\log_2 64 = 6$.',
+        '$64 \\to 32 \\to 16 \\to 8 \\to 4 \\to 2 \\to 1$ : 6 divisions, $T(64) = \\log_2 64 = 6$.',
+      ),
     },
     {
       kind: 'choice',
-      body: 'A function makes 2 comparisons, then calls itself **twice**, each time on half of the input. Which recurrence counts its comparisons?',
+      body: t(
+        'A function makes 2 comparisons, then calls itself **twice**, each time on half of the input. Which recurrence counts its comparisons?',
+        'Une fonction fait 2 comparaisons, puis s’appelle **deux fois**, chaque fois sur la moitié de l’entrée. Quelle récurrence compte ses comparaisons ?',
+      ),
       options: ['$C(n) = C(n/2) + 2$', '$C(n) = 2C(n/2) + 2$', '$C(n) = 2C(n-1) + 2$', '$C(n) = C(n-2) + 2$'],
       answer: 1,
-      explain: 'Two calls on size $n/2$ cost $2C(n/2)$, plus its own 2 comparisons. Spotting the shape "how many calls, on what size, plus how much work" is the key skill for chapter 1.',
+      explain: t(
+        'Two calls on size $n/2$ cost $2C(n/2)$, plus its own 2 comparisons. Spotting the shape "how many calls, on what size, plus how much work" is the key skill for chapter 1.',
+        'Deux appels sur une taille $n/2$ coûtent $2C(n/2)$, plus ses 2 propres comparaisons. Repérer la forme « combien d’appels, sur quelle taille, plus combien de travail » est la compétence clé du chapitre 1.',
+      ),
     },
   ],
 };
 
 const dots: Lesson = {
   id: 'c0l7',
-  title: 'Dots and lines',
-  summary: 'You know the words for graphs and trees: vertex, edge, path, weight, root, leaf, height.',
+  title: t('Dots and lines', 'Des points et des traits'),
+  summary: t(
+    'You know the words for graphs and trees: vertex, edge, path, weight, root, leaf, height.',
+    'Vous connaissez le vocabulaire des graphes et des arbres : sommet, arête, chemin, poids, racine, feuille, hauteur.',
+  ),
   warmup: true,
   steps: [
     {
       kind: 'read',
-      title: 'Graphs',
-      body: `A **graph** is a set of dots, called **vertices** (one **vertex**), joined by lines, called **edges**. It can model roads between towns, friendships, or the states of a puzzle.
+      title: t('Graphs', 'Les graphes'),
+      body: t(
+        `A **graph** is a set of dots, called **vertices** (one **vertex**), joined by lines, called **edges**. It can model roads between towns, friendships, or the states of a puzzle.
 
 Two vertices joined by an edge are **neighbours**. The **degree** of a vertex is its number of neighbours.`,
+        `Un **graphe** est un ensemble de points, appelés **sommets**, reliés par des traits, appelés **arêtes**. Il peut représenter des routes entre des villes, des amitiés, ou les états d’un casse-tête.
+
+Deux sommets reliés par une arête sont **voisins**. Le **degré** d’un sommet est son nombre de voisins.`,
+      ),
       widget: () => <GraphView nodes={DOTS.nodes} edges={DOTS.edges} width={360} height={200} />,
     },
     {
       kind: 'task',
-      body: 'Click all the neighbours of vertex **d**.',
+      body: t('Click all the neighbours of vertex **d**.', 'Cliquez sur tous les voisins du sommet **d**.'),
       widget: ({ onSolved }) => <NeighbourPicker nodes={DOTS.nodes} edges={DOTS.edges} target="d" onSolved={onSolved} />,
-      success: 'd is joined to b, c and e: degree 3.',
+      success: t('d is joined to b, c and e: degree 3.', 'd est relié à b, c et e : degré 3.'),
     },
     {
       kind: 'number',
-      body: 'In the same graph, what is the degree of vertex **e**?',
+      body: t('In the same graph, what is the degree of vertex **e**?', 'Dans le même graphe, quel est le degré du sommet **e** ?'),
       widget: () => <GraphView nodes={DOTS.nodes} edges={DOTS.edges} width={360} height={200} />,
       answer: 1,
-      explain: 'e has a single edge, to d.',
+      explain: t('e has a single edge, to d.', 'e n’a qu’une arête, vers d.'),
     },
     {
       kind: 'read',
-      title: 'Paths and cycles',
-      body: `A **path** is a walk from vertex to vertex along edges, such as a–b–d–e. Its **length** is its number of edges (here 3).
+      title: t('Paths and cycles', 'Chemins et cycles'),
+      body: t(
+        `A **path** is a walk from vertex to vertex along edges, such as a–b–d–e. Its **length** is its number of edges (here 3).
 
 A **cycle** is a path that comes back to where it started without reusing an edge, such as a–b–c–a.`,
+        `Un **chemin** est une promenade de sommet en sommet le long des arêtes, comme a–b–d–e. Sa **longueur** est son nombre d’arêtes (ici 3).
+
+Un **cycle** est un chemin qui revient à son point de départ sans réutiliser d’arête, comme a–b–c–a.`,
+      ),
     },
     {
       kind: 'number',
-      body: 'What is the fewest number of edges on a path from **a** to **e**?',
+      body: t(
+        'What is the fewest number of edges on a path from **a** to **e**?',
+        'Quel est le plus petit nombre d’arêtes d’un chemin de **a** à **e** ?',
+      ),
       widget: () => <GraphView nodes={DOTS.nodes} edges={DOTS.edges} width={360} height={200} />,
       answer: 3,
-      explain: 'a–b–d–e (or a–c–d–e): 3 edges. There is no shorter way, since e is only reachable through d.',
+      explain: t(
+        'a–b–d–e (or a–c–d–e): 3 edges. There is no shorter way, since e is only reachable through d.',
+        'a–b–d–e (ou a–c–d–e) : 3 arêtes. Il n’y a pas plus court, puisqu’on n’atteint e qu’en passant par d.',
+      ),
     },
     {
       kind: 'read',
-      title: 'Arrows and weights',
-      body: `In a **directed** graph the edges are arrows, one-way streets: you may only follow them forwards.
+      title: t('Arrows and weights', 'Flèches et poids'),
+      body: t(
+        `In a **directed** graph the edges are arrows, one-way streets: you may only follow them forwards.
 
 In a **weighted** graph each edge carries a number, its **weight** — a distance, a time, a price. The length of a path is then the **sum of its weights**.`,
+        `Dans un graphe **orienté**, les arêtes sont des flèches, des rues à sens unique : on ne peut les suivre que dans leur sens.
+
+Dans un graphe **pondéré**, chaque arête porte un nombre, son **poids** — une distance, une durée, un prix. La longueur d’un chemin est alors la **somme de ses poids**.`,
+      ),
       widget: () => <GraphView nodes={ROADS.nodes} edges={ROADS.edges} width={360} height={200} />,
     },
     {
       kind: 'number',
-      body: 'Following the arrows, what is the length of the **shortest** path from **p** to **s**?',
+      body: t(
+        'Following the arrows, what is the length of the **shortest** path from **p** to **s**?',
+        'En suivant les flèches, quelle est la longueur du **plus court** chemin de **p** à **s** ?',
+      ),
       widget: () => <GraphView nodes={ROADS.nodes} edges={ROADS.edges} width={360} height={200} />,
       answer: 6,
-      hint: 'List the routes: p→q→s, p→r→s, p→r→q→s. Add the weights of each.',
-      explain: 'p→q→s = 4 + 3 = 7, p→r→s = 1 + 7 = 8, p→r→q→s = 1 + 2 + 3 = **6**. The route with the most edges is the shortest one!',
+      hint: t(
+        'List the routes: p→q→s, p→r→s, p→r→q→s. Add the weights of each.',
+        'Listez les trajets : p→q→s, p→r→s, p→r→q→s. Additionnez les poids de chacun.',
+      ),
+      explain: t(
+        'p→q→s = 4 + 3 = 7, p→r→s = 1 + 7 = 8, p→r→q→s = 1 + 2 + 3 = **6**. The route with the most edges is the shortest one!',
+        'p→q→s = 4 + 3 = 7, p→r→s = 1 + 7 = 8, p→r→q→s = 1 + 2 + 3 = **6**. Le trajet qui a le plus d’arêtes est le plus court !',
+      ),
     },
     {
       kind: 'read',
-      title: 'Trees',
-      body: `A **tree** is a graph with no cycle, drawn upside down: the **root** at the top. Each vertex (also called a **node**) below the root hangs from one **parent**; the nodes below it are its **children**. A node without children is a **leaf**.
+      title: t('Trees', 'Les arbres'),
+      body: t(
+        `A **tree** is a graph with no cycle, drawn upside down: the **root** at the top. Each vertex (also called a **node**) below the root hangs from one **parent**; the nodes below it are its **children**. A node without children is a **leaf**.
 
 The **height** of a tree is the number of edges on the longest path from the root down to a leaf. In a **binary tree** every node has at most two children, a **left** and a **right** one.`,
+        `Un **arbre** est un graphe sans cycle, dessiné à l’envers : la **racine** en haut. Chaque sommet (aussi appelé **nœud**) sous la racine est accroché à un seul **parent** ; les nœuds en dessous de lui sont ses **enfants**. Un nœud sans enfant est une **feuille**.
+
+La **hauteur** d’un arbre est le nombre d’arêtes du plus long chemin descendant de la racine à une feuille. Dans un **arbre binaire**, chaque nœud a au plus deux enfants, un **gauche** et un **droit**.`,
+      ),
       widget: () => <TreeView root={FAMILY} />,
     },
     {
       kind: 'number',
-      body: 'How many leaves does this tree have?',
-      widget: () => <TreeView root={FAMILY} />,
-      answer: 3,
-      hint: 'Leaves are the nodes with no children below them.',
-      explain: 'D, G and F have no children. (B, C and E each have at least one.)',
-    },
-    {
-      kind: 'number',
-      body: 'What is the height of this tree?',
+      body: t('How many leaves does this tree have?', 'Combien de feuilles cet arbre a-t-il ?'),
       widget: () => <TreeView root={FAMILY} />,
       answer: 3,
-      hint: 'Count edges, not nodes, on the longest root-to-leaf path.',
-      explain: 'A–B–E–G has 3 edges, the longest way down.',
+      hint: t('Leaves are the nodes with no children below them.', 'Les feuilles sont les nœuds sans enfant en dessous.'),
+      explain: t('D, G and F have no children. (B, C and E each have at least one.)', 'D, G et F n’ont pas d’enfant. (B, C et E en ont chacun au moins un.)'),
     },
     {
       kind: 'number',
-      body: 'A binary tree of height 3 is **full**: every level has as many nodes as possible. How many nodes does it have in total?',
+      body: t('What is the height of this tree?', 'Quelle est la hauteur de cet arbre ?'),
+      widget: () => <TreeView root={FAMILY} />,
+      answer: 3,
+      hint: t(
+        'Count edges, not nodes, on the longest root-to-leaf path.',
+        'Comptez les arêtes, pas les nœuds, sur le plus long chemin de la racine à une feuille.',
+      ),
+      explain: t('A–B–E–G has 3 edges, the longest way down.', 'A–B–E–G a 3 arêtes : c’est la plus longue descente.'),
+    },
+    {
+      kind: 'number',
+      body: t(
+        'A binary tree of height 3 is **full**: every level has as many nodes as possible. How many nodes does it have in total?',
+        'Un arbre binaire de hauteur 3 est **complet** : chaque niveau a autant de nœuds que possible. Combien de nœuds a-t-il en tout ?',
+      ),
       answer: 15,
-      hint: 'Each level has twice as many nodes as the one above: 1, 2, 4, …',
-      explain: '$1 + 2 + 4 + 8 = 15 = 2^4 - 1$: a doubling sum. Turned around: a binary tree holding $n$ nodes has height at least about $\\log_2 n$.',
+      hint: t(
+        'Each level has twice as many nodes as the one above: 1, 2, 4, …',
+        'Chaque niveau a deux fois plus de nœuds que celui du dessus : 1, 2, 4, …',
+      ),
+      explain: t(
+        '$1 + 2 + 4 + 8 = 15 = 2^4 - 1$: a doubling sum. Turned around: a binary tree holding $n$ nodes has height at least about $\\log_2 n$.',
+        '$1 + 2 + 4 + 8 = 15 = 2^4 - 1$ : une somme qui double. Dans l’autre sens : un arbre binaire de $n$ nœuds a une hauteur d’au moins environ $\\log_2 n$.',
+      ),
     },
   ],
 };

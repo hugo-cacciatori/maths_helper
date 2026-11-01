@@ -67,5 +67,6 @@ describe('content', () => {
       </MemoryRouter>,
     );
     expect(getByText('Measuring cost')).toBeTruthy();
+    expect(getByText('Français').getAttribute('lang')).toBe('fr');
   });
 });

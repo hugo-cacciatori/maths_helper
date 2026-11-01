@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
+import { t } from '../lib/i18n';
 import { Caption, Controls, Panel, Stat, useStepper } from './kit';
 
 /* ======================= Tournament & second largest ======================= */
@@ -22,30 +23,54 @@ export function tournament(values: number[]) {
 }
 
 export function TournamentViz({ values, onSolved }: { values: number[]; onSolved?: () => void }) {
-  const t = useMemo(() => tournament(values), [values]);
-  const rounds = t.levels.length - 1;
+  const tour = useMemo(() => tournament(values), [values]);
+  const rounds = tour.levels.length - 1;
   const frames: TFrame[] = useMemo(() => {
-    const f: TFrame[] = [{ levels: 0, playoff: 0, comps: 0, msg: `${values.length} players. Each match compares two values; the larger one goes up.` }];
+    const f: TFrame[] = [
+      {
+        levels: 0,
+        playoff: 0,
+        comps: 0,
+        msg: t(
+          `${values.length} players. Each match compares two values; the larger one goes up.`,
+          `${values.length} joueurs. Chaque match compare deux valeurs ; la plus grande monte.`,
+        ),
+      },
+    ];
     let comps = 0;
     for (let r = 1; r <= rounds; r++) {
-      comps += t.levels[r].length;
-      f.push({ levels: r, playoff: 0, comps, msg: `Round ${r}: ${t.levels[r].length} match${t.levels[r].length > 1 ? 'es' : ''}.` });
+      comps += tour.levels[r].length;
+      const m = tour.levels[r].length;
+      f.push({ levels: r, playoff: 0, comps, msg: t(`Round ${r}: ${m} match${m > 1 ? 'es' : ''}.`, `Tour ${r} : ${m} match${m > 1 ? 's' : ''}.`) });
     }
-    f.push({ levels: rounds, playoff: 0, comps, msg: `${t.champ} wins after ${comps} matches. The second best can only have lost to ${t.champ}: candidates ${t.beaten.join(', ')}.` });
-    for (let k = 1; k < t.beaten.length; k++) {
+    f.push({
+      levels: rounds,
+      playoff: 0,
+      comps,
+      msg: t(
+        `${tour.champ} wins after ${comps} matches. The second best can only have lost to ${tour.champ}: candidates ${tour.beaten.join(', ')}.`,
+        `${tour.champ} gagne après ${comps} matchs. Le deuxième n’a pu perdre que contre ${tour.champ} : candidats ${tour.beaten.join(', ')}.`,
+      ),
+    });
+    for (let k = 1; k < tour.beaten.length; k++) {
       comps++;
-      f.push({ levels: rounds, playoff: k, comps, msg: `Playoff: max(${Math.max(...t.beaten.slice(0, k))}, ${t.beaten[k]}) = ${Math.max(...t.beaten.slice(0, k + 1))}.` });
+      f.push({ levels: rounds, playoff: k, comps, msg: `${t('Playoff', 'Barrage')}${t(':', ' :')} max(${Math.max(...tour.beaten.slice(0, k))}, ${tour.beaten[k]}) = ${Math.max(...tour.beaten.slice(0, k + 1))}.` });
     }
-    f.push({ levels: rounds, playoff: t.beaten.length - 1, comps, msg: `Second largest: **${t.second}**, with ${comps} comparisons in total.` });
+    f.push({
+      levels: rounds,
+      playoff: tour.beaten.length - 1,
+      comps,
+      msg: t(`Second largest: **${tour.second}**, with ${comps} comparisons in total.`, `Deuxième plus grand : **${tour.second}**, avec ${comps} comparaisons au total.`),
+    });
     return f;
-  }, [t, rounds, values.length]);
+  }, [tour, rounds, values.length]);
   const s = useStepper(frames.length, onSolved, 1000);
   const f = frames[s.i];
   const W = 560;
   const rowH = 62;
   const H = rowH * rounds + 50;
   const X = (level: number, k: number) => {
-    const span = W / t.levels[level].length;
+    const span = W / tour.levels[level].length;
     return span * k + span / 2;
   };
   const Y = (level: number) => H - 26 - level * rowH;
@@ -53,7 +78,7 @@ export function TournamentViz({ values, onSolved }: { values: number[]; onSolved
   return (
     <Panel>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
-        {t.levels.slice(1).map((lv, i) =>
+        {tour.levels.slice(1).map((lv, i) =>
           lv.map((_, k) => {
             const level = i + 1;
             if (level > f.levels) return null;
@@ -72,11 +97,11 @@ export function TournamentViz({ values, onSolved }: { values: number[]; onSolved
             );
           }),
         )}
-        {t.levels.map((lv, level) =>
+        {tour.levels.map((lv, level) =>
           lv.map((v, k) => {
             if (level > f.levels) return null;
-            const isChamp = v === t.champ;
-            const cand = candidatesShown && level < rounds && t.beaten[level] === v && t.levels[level].indexOf(t.champ) === (k % 2 ? k - 1 : k + 1);
+            const isChamp = v === tour.champ;
+            const cand = candidatesShown && level < rounds && tour.beaten[level] === v && tour.levels[level].indexOf(tour.champ) === (k % 2 ? k - 1 : k + 1);
             const fill = isChamp ? 'var(--v-active)' : cand ? 'var(--v-visit)' : 'var(--v-idle)';
             return (
               <motion.g key={`${level}-${k}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -90,9 +115,9 @@ export function TournamentViz({ values, onSolved }: { values: number[]; onSolved
         )}
       </svg>
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="comparisons" value={f.comps} tone="brand" />
-        <Stat label="rounds" value={rounds} />
-        <Stat label="naive (2n − 3)" value={2 * values.length - 3} />
+        <Stat label={t('comparisons', 'comparaisons')} value={f.comps} tone="brand" />
+        <Stat label={t('rounds', 'tours')} value={rounds} />
+        <Stat label={t('naive (2n − 3)', 'naïf (2n − 3)')} value={2 * values.length - 3} />
       </div>
       <Caption tone={s.i === frames.length - 1 ? 'ok' : 'neutral'}>{f.msg}</Caption>
       <Controls s={s} />
@@ -108,23 +133,33 @@ export function kadaneFrames(A: number[]) {
   let start = 0;
   let best = 0;
   let bestRange: [number, number] | null = null;
-  frames.push({ j: null, start, sum, best, bestRange, msg: 'Scan once, keeping the best sum of a run ending at the current position.' });
+  frames.push({
+    j: null,
+    start,
+    sum,
+    best,
+    bestRange,
+    msg: t('Scan once, keeping the best sum of a run ending at the current position.', 'Un seul passage, en gardant la meilleure somme d’une série qui finit à la position courante.'),
+  });
   A.forEach((x, j) => {
     sum += x;
-    let note = `Add ${x}: running sum ${sum}.`;
+    let note = t(`Add ${x}: running sum ${sum}.`, `On ajoute ${x} : somme courante ${sum}.`);
     if (sum > best) {
       best = sum;
       bestRange = [start, j];
-      note += ` New best: ${best}.`;
+      note += t(` New best: ${best}.`, ` Nouveau meilleur : ${best}.`);
     }
     if (sum < 0) {
-      note += ' Negative — a run ending here can only hurt what follows: reset to 0.';
+      note += t(
+        ' Negative — a run ending here can only hurt what follows: reset to 0.',
+        ' Négative — une série qui finit ici ne peut que nuire à la suite : remise à 0.',
+      );
       sum = 0;
       start = j + 1;
     }
     frames.push({ j, start, sum, best, bestRange, msg: note });
   });
-  frames.push({ j: null, start, sum, best, bestRange, msg: `Maximum sum: **${best}**, found in a single pass.` });
+  frames.push({ j: null, start, sum, best, bestRange, msg: t(`Maximum sum: **${best}**, found in a single pass.`, `Somme maximale : **${best}**, trouvée en un seul passage.`) });
   return frames;
 }
 
@@ -166,8 +201,8 @@ export function MaxSubarray({ A, onSolved }: { A: number[]; onSolved?: () => voi
         })}
       </svg>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="running sum" value={f.sum} tone="brand" />
-        <Stat label="best so far" value={f.best} tone="ok" />
+        <Stat label={t('running sum', 'somme courante')} value={f.sum} tone="brand" />
+        <Stat label={t('best so far', 'meilleur jusqu’ici')} value={f.best} tone="ok" />
       </div>
       <Caption>{f.msg}</Caption>
       <Controls s={s} />
@@ -178,6 +213,9 @@ export function MaxSubarray({ A, onSolved }: { A: number[]; onSolved?: () => voi
 /* ======================= Counterfeit coin & balance ======================= */
 
 type Pan = 0 | 1 | 2; // 0 off, 1 left, 2 right
+
+const tiltName = (tilt: number) =>
+  tilt === 0 ? t('balanced', 'équilibre') : tilt > 0 ? t('left heavier', 'gauche plus lourd') : t('right heavier', 'droite plus lourd');
 
 export function BalanceScale({ coins = 8, maxWeighings = 2, onSolved }: { coins?: number; maxWeighings?: number; onSolved?: () => void }) {
   const [fake, setFake] = useState(() => Math.floor(Math.random() * coins));
@@ -240,7 +278,7 @@ export function BalanceScale({ coins = 8, maxWeighings = 2, onSolved }: { coins?
                 setPlace(place.map((q, k) => (k === i ? (((q + 1) % 3) as Pan) : q)));
               }}
               className="flex flex-col items-center gap-1"
-              aria-label={`Coin ${i + 1}`}
+              aria-label={t(`Coin ${i + 1}`, `Pièce ${i + 1}`)}
             >
               <span
                 className="flex h-11 w-11 items-center justify-center rounded-full border-2 font-mono text-sm font-bold transition"
@@ -252,46 +290,52 @@ export function BalanceScale({ coins = 8, maxWeighings = 2, onSolved }: { coins?
               >
                 {i + 1}
               </span>
-              <span className="h-4 text-[10px] font-bold text-muted">{p === 1 ? 'LEFT' : p === 2 ? 'RIGHT' : ''}</span>
+              <span className="h-4 text-[10px] font-bold text-muted">{p === 1 ? t('LEFT', 'GAUCHE') : p === 2 ? t('RIGHT', 'DROITE') : ''}</span>
             </button>
           );
         })}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="weighings" value={`${log.length} / ${maxWeighings}`} tone={log.length > maxWeighings ? 'warn' : 'brand'} />
-        <Stat label="last result" value={last ? (last.tilt === 0 ? 'balanced' : last.tilt > 0 ? 'left heavier' : 'right heavier') : '—'} />
+        <Stat label={t('weighings', 'pesées')} value={`${log.length} / ${maxWeighings}`} tone={log.length > maxWeighings ? 'warn' : 'brand'} />
+        <Stat label={t('last result', 'dernier résultat')} value={last ? tiltName(last.tilt) : '—'} />
       </div>
       {verdict ? (
         <Caption tone={verdict.ok && log.length <= maxWeighings ? 'ok' : 'warn'}>
           {verdict.ok
             ? log.length <= maxWeighings
-              ? `Correct — coin ${fake + 1} is the light fake, found in ${log.length} weighing${log.length === 1 ? '' : 's'}!`
-              : `Correct, but it took ${log.length} weighings. Can you do it in ${maxWeighings}?`
-            : `No — coin ${verdict.who + 1} is genuine; the fake was coin ${fake + 1}.`}
+              ? t(
+                  `Correct — coin ${fake + 1} is the light fake, found in ${log.length} weighing${log.length === 1 ? '' : 's'}!`,
+                  `Exact — la pièce ${fake + 1} est la fausse, plus légère, trouvée en ${log.length} pesée${log.length > 1 ? 's' : ''} !`,
+                )
+              : t(`Correct, but it took ${log.length} weighings. Can you do it in ${maxWeighings}?`, `Exact, mais il a fallu ${log.length} pesées. Y arriverez-vous en ${maxWeighings} ?`)
+            : t(`No — coin ${verdict.who + 1} is genuine; the fake was coin ${fake + 1}.`, `Non — la pièce ${verdict.who + 1} est vraie ; la fausse était la pièce ${fake + 1}.`)}
         </Caption>
       ) : (
         <Caption>
           {accuse
-            ? 'Click the coin you think is the fake.'
-            : 'Click a coin to cycle it: left pan → right pan → off. Then weigh. One coin is lighter than the others.'}
+            ? t('Click the coin you think is the fake.', 'Cliquez sur la pièce que vous pensez fausse.')
+            : t(
+                'Click a coin to cycle it: left pan → right pan → off. Then weigh. One coin is lighter than the others.',
+                'Cliquez sur une pièce pour la déplacer : plateau gauche → plateau droit → hors balance. Puis pesez. Une pièce est plus légère que les autres.',
+              )}
         </Caption>
       )}
       <div className="flex flex-wrap gap-2">
         <button className="btn-primary" onClick={weigh} disabled={!!verdict || accuse || (left.length === 0 && right.length === 0)}>
-          Weigh
+          {t('Weigh', 'Peser')}
         </button>
         <button className={`btn ${accuse ? '!border-bad !text-bad' : ''}`} onClick={() => setAccuse(!accuse)} disabled={!!verdict}>
-          {accuse ? 'Cancel' : 'Name the fake'}
+          {accuse ? t('Cancel', 'Annuler') : t('Name the fake', 'Désigner la fausse')}
         </button>
         <button className="btn ml-auto" onClick={reset}>
-          New coins
+          {t('New coins', 'Nouvelles pièces')}
         </button>
       </div>
       {log.length > 0 && (
         <div className="space-y-0.5 font-mono text-xs text-muted">
           {log.map((w, k) => (
             <div key={k}>
-              #{k + 1}: [{w.l.map((c) => c + 1).join(' ')}] vs [{w.r.map((c) => c + 1).join(' ')}] → {w.tilt === 0 ? 'balanced' : w.tilt > 0 ? 'left heavier' : 'right heavier'}
+              #{k + 1}: [{w.l.map((c) => c + 1).join(' ')}] {t('vs', 'contre')} [{w.r.map((c) => c + 1).join(' ')}] → {tiltName(w.tilt)}
             </div>
           ))}
         </div>

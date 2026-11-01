@@ -1,5 +1,6 @@
 import katex from 'katex';
 import { Fragment, type ReactNode } from 'react';
+import { lang } from '../lib/i18n';
 
 export function TeX({ children, block = false }: { children: string; block?: boolean }) {
   const html = katex.renderToString(children, { throwOnError: false, displayMode: block });
@@ -10,6 +11,9 @@ export function TeX({ children, block = false }: { children: string; block?: boo
   );
 }
 
+/** French typography: a narrow no-break space keeps `?`, `!`, `:`, `;` and `»` on the word's line. */
+const typo = (s: string) => (lang === 'fr' ? s.replace(/ ([?!:;»])/g, ' $1').replace(/« /g, '« ') : s);
+
 /** Inline formatting: $math$, **bold**, *italic*, `code`. */
 function inline(text: string): ReactNode[] {
   const out: ReactNode[] = [];
@@ -18,11 +22,11 @@ function inline(text: string): ReactNode[] {
   let m: RegExpExecArray | null;
   let k = 0;
   while ((m = re.exec(text))) {
-    if (m.index > last) out.push(text.slice(last, m.index));
+    if (m.index > last) out.push(typo(text.slice(last, m.index)));
     const tok = m[0];
     if (tok.startsWith('$')) out.push(<TeX key={k++}>{tok.slice(1, -1)}</TeX>);
-    else if (tok.startsWith('**')) out.push(<strong key={k++} className="font-semibold">{tok.slice(2, -2)}</strong>);
-    else if (tok.startsWith('*')) out.push(<em key={k++}>{tok.slice(1, -1)}</em>);
+    else if (tok.startsWith('**')) out.push(<strong key={k++} className="font-semibold">{typo(tok.slice(2, -2))}</strong>);
+    else if (tok.startsWith('*')) out.push(<em key={k++}>{typo(tok.slice(1, -1))}</em>);
     else
       out.push(
         <code key={k++} className="rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[0.88em]">
@@ -31,7 +35,7 @@ function inline(text: string): ReactNode[] {
       );
     last = m.index + tok.length;
   }
-  if (last < text.length) out.push(text.slice(last));
+  if (last < text.length) out.push(typo(text.slice(last)));
   return out;
 }
 

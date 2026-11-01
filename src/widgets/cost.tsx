@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TeX } from '../components/Prose';
+import { dec, num, t } from '../lib/i18n';
 import { Caption, CodeBlock, Controls, Panel, Slider, Stat, TreeView, useStepper, type TNode } from './kit';
 
 export const SERIES = ['#4f46e5', '#e11d48', '#0891b2', '#d97706', '#16a34a'];
@@ -23,7 +24,7 @@ export function GrowthPlot({ fns, nMax: initialMax = 20, maxRange = [5, 200] }: 
   const X = (x: number) => pad.l + ((x - 1) / (nMax - 1)) * (W - pad.l - pad.r);
   const Y = (y: number) => H - pad.b - ((tr(y) - yMin) / (yMax - yMin)) * (H - pad.t - pad.b);
   const fmt = (v: number) =>
-    v >= 1e6 ? v.toExponential(1).replace('e+', 'e') : v >= 100 ? Math.round(v).toLocaleString('en') : +v.toFixed(2) + '';
+    v >= 1e6 ? v.toExponential(1).replace('e+', 'e') : v >= 100 ? num(Math.round(v)) : t(String(+v.toFixed(2)), String(+v.toFixed(2)).replace('.', ','));
   const ticks = log
     ? Array.from({ length: Math.floor(yMax) - Math.ceil(yMin) + 1 }, (_, i) => 10 ** (Math.ceil(yMin) + i)).filter((_, i, a) => a.length < 8 || i % 2 === 0)
     : [0, 0.25, 0.5, 0.75, 1].map((p) => p * yMaxRaw);
@@ -75,19 +76,20 @@ export function GrowthPlot({ fns, nMax: initialMax = 20, maxRange = [5, 200] }: 
       {fns.length === 2 && (
         <Caption>
           <span>
-            Ratio at n = {nMax}: <TeX>{`\\dfrac{${fns[0].tex}}{${fns[1].tex}}`}</TeX> ≈{' '}
+            {t('Ratio at', 'Rapport en')} n = {nMax}{t(':', ' :')} <TeX>{`\\dfrac{${fns[0].tex}}{${fns[1].tex}}`}</TeX> ≈{' '}
             <b className="font-mono">{fmt(fns[0].f(nMax) / fns[1].f(nMax))}</b>
-            {'  '}— watch what this ratio does as you drag n to the right.
+            {'  '}
+            {t('— watch what this ratio does as you drag n to the right.', '— regardez ce que fait ce rapport quand vous poussez n vers la droite.')}
           </span>
         </Caption>
       )}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex-1">
-          <Slider label="n up to" value={nMax} min={maxRange[0]} max={maxRange[1]} onChange={setNMax} />
+          <Slider label={t('n up to', 'n jusqu’à')} value={nMax} min={maxRange[0]} max={maxRange[1]} onChange={setNMax} />
         </div>
         <label className="inline-flex items-center gap-2 text-sm font-semibold text-muted">
           <input type="checkbox" checked={log} onChange={(e) => setLog(e.target.checked)} className="accent-[var(--brand)]" />
-          log scale
+          {t('log scale', 'échelle log')}
         </label>
       </div>
     </Panel>
@@ -125,8 +127,8 @@ export function QuadrupleBars({ fns }: { fns: (Fn & { name: string })[] }) {
 
 function fmtNum(v: number) {
   if (v >= 1e9) return v.toExponential(2).replace('e+', 'e');
-  if (Number.isInteger(v)) return v.toLocaleString('en');
-  return v.toFixed(2);
+  if (Number.isInteger(v)) return num(v);
+  return dec(v, 2);
 }
 
 function Bar({ value, max, color, label }: { value: number; max: number; color: string; label: string }) {
@@ -172,7 +174,7 @@ export function TraceRunner({
   initialN = 5,
   inputName = 'N',
   onSolved,
-  opName = 'basic operation',
+  opName = t('basic operation', 'opération de base'),
 }: {
   program: Program;
   nRange?: [number, number];
@@ -193,12 +195,14 @@ export function TraceRunner({
           {Object.entries(f?.vars ?? {}).map(([k, v]) => (
             <Stat key={k} label={k} value={v} />
           ))}
-          <Stat label={`${opName} count`} value={f?.count ?? 0} tone="brand" />
+          <Stat label={t(`${opName} count`, `${opName} : nombre`)} value={f?.count ?? 0} tone="brand" />
         </div>
       </div>
       <Controls s={s} />
       {s.i >= frames.length - 1 && (
-        <Caption tone="ok">{`Finished: the ${opName} ran **${total}** times for ${inputName} = ${N}.`}</Caption>
+        <Caption tone="ok">
+          {t(`Finished: the ${opName} ran **${total}** times for ${inputName} = ${N}.`, `Terminé : « ${opName} » s’est exécuté **${total}** fois pour ${inputName} = ${N}.`)}
+        </Caption>
       )}
       <Slider label={inputName} value={N} min={nRange[0]} max={nRange[1]} onChange={setN} />
     </Panel>
@@ -220,7 +224,7 @@ export function LoopLab({ programs, onSolved }: { programs: Program[]; onSolved?
           </button>
         ))}
       </div>
-      <TraceRunner key={p.name} program={p} nRange={[1, 12]} initialN={6} onSolved={onSolved} opName="innermost line" />
+      <TraceRunner key={p.name} program={p} nRange={[1, 12]} initialN={6} onSolved={onSolved} opName={t('innermost line', 'ligne la plus intérieure')} />
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -235,7 +239,7 @@ export function LoopLab({ programs, onSolved }: { programs: Program[]; onSolved?
           </thead>
           <tbody>
             <tr className="border-t border-border">
-              <td className="py-1.5 pr-3 font-semibold">count</td>
+              <td className="py-1.5 pr-3 font-semibold">{t('count', 'compte')}</td>
               {counts.map((c, i) => (
                 <td key={i} className="px-2 text-right font-mono">
                   {c}
@@ -243,10 +247,10 @@ export function LoopLab({ programs, onSolved }: { programs: Program[]; onSolved?
               ))}
             </tr>
             <tr className="border-t border-border">
-              <td className="py-1.5 pr-3 font-semibold">×, when N doubles</td>
+              <td className="py-1.5 pr-3 font-semibold">{t('×, when N doubles', '×, quand N double')}</td>
               {counts.map((c, i) => (
                 <td key={i} className="px-2 text-right font-mono text-brand">
-                  {i === 0 ? '—' : (c / counts[i - 1]).toFixed(2)}
+                  {i === 0 ? '—' : dec(c / counts[i - 1], 2)}
                 </td>
               ))}
             </tr>
@@ -254,7 +258,10 @@ export function LoopLab({ programs, onSolved }: { programs: Program[]; onSolved?
         </table>
       </div>
       <p className="text-xs text-muted">
-        Doubling ratio → 2 means linear, → 4 means quadratic, → 1 means logarithmic, slightly above 2 means n log n.
+        {t(
+          'Doubling ratio → 2 means linear, → 4 means quadratic, → 1 means logarithmic, slightly above 2 means n log n.',
+          'Rapport de doublement → 2 : linéaire, → 4 : quadratique, → 1 : logarithmique, un peu au-dessus de 2 : n log n.',
+        )}
       </p>
     </Panel>
   );
@@ -289,7 +296,7 @@ export function OddSquares() {
           })}
         </svg>
         <div className="space-y-2 text-sm">
-          <p>Each new L-shaped layer adds the next odd number of squares:</p>
+          <p>{t('Each new L-shaped layer adds the next odd number of squares:', 'Chaque nouvelle couche en L ajoute le nombre impair suivant de carrés :')}</p>
           <div className="flex flex-wrap gap-1">
             {terms.map((t, i) => (
               <span key={i} className="rounded-md px-2 py-0.5 font-mono text-xs font-bold text-white" style={{ background: SERIES[i % SERIES.length] }}>
@@ -300,7 +307,7 @@ export function OddSquares() {
           <TeX block>{`${terms.length > 4 ? '1+3+\\dots+' + terms[terms.length - 1] : terms.join('+')} = ${k}^2 = ${k * k}`}</TeX>
         </div>
       </div>
-      <Slider label="layers k" value={k} min={1} max={12} onChange={setK} />
+      <Slider label={t('layers k', 'couches k')} value={k} min={1} max={12} onChange={setK} />
     </Panel>
   );
 }
@@ -335,16 +342,22 @@ export function DoublingBars() {
         })()}
         <rect x={4} y={44} width={next * scale} height={28} rx={3} fill="none" stroke="var(--v-idle-stroke)" strokeDasharray="4 3" strokeWidth={1.5} />
         <text x={4 + (next * scale) / 2} y={63} textAnchor="middle" fontSize={12} fontWeight={700} fill="var(--muted)">
-          next term: {next}
+          {t('next term:', 'terme suivant :')} {next}
         </text>
       </svg>
       <Caption>
-        <span>
-          The bars <TeX>{`2+4+\\dots+${terms[terms.length - 1]}`}</TeX> fill the next term <b>minus the first 2</b>:{' '}
-          <TeX>{`\\;${sum} = ${next} - 2`}</TeX>
-        </span>
+        {t(
+          <span>
+            The bars <TeX>{`2+4+\\dots+${terms[terms.length - 1]}`}</TeX> fill the next term <b>minus the first 2</b>:{' '}
+            <TeX>{`\\;${sum} = ${next} - 2`}</TeX>
+          </span>,
+          <span>
+            Les barres <TeX>{`2+4+\\dots+${terms[terms.length - 1]}`}</TeX> remplissent le terme suivant <b>moins le premier 2</b> :{' '}
+            <TeX>{`\\;${sum} = ${next} - 2`}</TeX>
+          </span>,
+        )}
       </Caption>
-      <Slider label="terms" value={k} min={1} max={10} onChange={setK} />
+      <Slider label={t('terms', 'termes')} value={k} min={1} max={10} onChange={setK} />
     </Panel>
   );
 }
@@ -386,7 +399,7 @@ export function PowerCallTree({ onSolved }: { onSolved?: () => void }) {
       </div>
       <div className="grid grid-cols-3 gap-2">
         <Stat label="n" value={n} />
-        <Stat label="calls" value={calls} tone="brand" />
+        <Stat label={t('calls', 'appels')} value={calls} tone="brand" />
         <Stat label="additions" value={adds} tone="warn" />
       </div>
       <Slider label="n" value={n} min={0} max={5} onChange={setN} />
@@ -416,7 +429,7 @@ export function RecurrenceCheck({
         <TeX>{rec.tex}</TeX>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-sm font-semibold text-muted">Test a guess:</span>
+        <span className="text-sm font-semibold text-muted">{t('Test a guess:', 'Tester une hypothèse :')}</span>
         {candidates.map((c, i) => (
           <button key={i} onClick={() => setPick(i)} className={`btn ${pick === i ? '!border-brand !bg-brand-soft' : ''}`}>
             <TeX>{c.tex}</TeX>
@@ -444,7 +457,7 @@ export function RecurrenceCheck({
             </tr>
             {cand && (
               <tr className="border-t border-border">
-                <td className="py-1.5 pr-3 font-semibold text-muted">guess</td>
+                <td className="py-1.5 pr-3 font-semibold text-muted">{t('guess', 'hypothèse')}</td>
                 {vals.map((v, i) => {
                   const g = cand.f(start + i);
                   return (
@@ -461,8 +474,11 @@ export function RecurrenceCheck({
       {cand && (
         <Caption tone={vals.every((v, i) => cand.f(start + i) === v) ? 'ok' : 'warn'}>
           {vals.every((v, i) => cand.f(start + i) === v)
-            ? 'Every value matches — a strong sign this is the closed form (a proof by induction would seal it).'
-            : 'Some values differ, so this guess is wrong.'}
+            ? t(
+                'Every value matches — a strong sign this is the closed form (a proof by induction would seal it).',
+                'Toutes les valeurs correspondent — un bon signe que c’est la forme close (une preuve par récurrence le confirmerait).',
+              )
+            : t('Some values differ, so this guess is wrong.', 'Certaines valeurs diffèrent : cette hypothèse est fausse.')}
         </Caption>
       )}
     </Panel>
@@ -498,7 +514,7 @@ export function Rabbits({ onSolved }: { onSolved?: () => void }) {
         {ages.map((a, i) => (
           <span
             key={i}
-            title={a >= 2 ? 'fertile pair' : a === 1 ? '1 month old' : 'newborn'}
+            title={a >= 2 ? t('fertile pair', 'couple fécond') : a === 1 ? t('1 month old', '1 mois') : t('newborn', 'nouveau-né')}
             className="inline-block rounded-full transition-all"
             style={{
               width: dot,
@@ -510,13 +526,13 @@ export function Rabbits({ onSolved }: { onSolved?: () => void }) {
       </div>
       <div className="flex flex-wrap gap-3 text-xs text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-v-done" /> newborn
+          <span className="h-3 w-3 rounded-full bg-v-done" /> {t('newborn', 'nouveau-né')}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-v-active" /> 1 month old (not fertile yet)
+          <span className="h-3 w-3 rounded-full bg-v-active" /> {t('1 month old (not fertile yet)', '1 mois (pas encore fécond)')}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-3 w-3 rounded-full bg-v-visit" /> fertile: produces a pair every month
+          <span className="h-3 w-3 rounded-full bg-v-visit" /> {t('fertile: produces a pair every month', 'fécond : donne un couple chaque mois')}
         </span>
       </div>
       <div className="overflow-x-auto">
@@ -533,7 +549,7 @@ export function Rabbits({ onSolved }: { onSolved?: () => void }) {
           ))}
         </div>
       </div>
-      <Slider label="month" value={m} min={0} max={12} onChange={setM} />
+      <Slider label={t('month', 'mois')} value={m} min={0} max={12} onChange={setM} />
     </Panel>
   );
 }

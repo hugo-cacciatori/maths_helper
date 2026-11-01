@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
+import { t } from '../lib/i18n';
 import { ArrayRow, Caption, Controls, Panel, Slider, Stat, useStepper, type CellTone } from './kit';
 
 /* ======================= Binary search ======================= */
@@ -9,7 +10,7 @@ export const BS_ARRAY = [3, 14, 27, 31, 39, 42, 55, 70, 74, 81, 85, 93, 98];
 type BsFrame = { lo: number; hi: number; mid: number | null; comps: number; msg: string; found?: number };
 
 function bsFrames(A: number[], key: number): BsFrame[] {
-  const f: BsFrame[] = [{ lo: 0, hi: A.length - 1, mid: null, comps: 0, msg: `Search for ${key} in the whole array.` }];
+  const f: BsFrame[] = [{ lo: 0, hi: A.length - 1, mid: null, comps: 0, msg: t(`Search for ${key} in the whole array.`, `On cherche ${key} dans tout le tableau.`) }];
   let lo = 0;
   let hi = A.length - 1;
   let comps = 0;
@@ -17,15 +18,24 @@ function bsFrames(A: number[], key: number): BsFrame[] {
     const mid = Math.floor((lo + hi) / 2);
     comps++;
     if (A[mid] === key) {
-      f.push({ lo, hi, mid, comps, found: mid, msg: `A[${mid}] = ${A[mid]} = ${key}: found after **${comps}** comparison${comps > 1 ? 's' : ''}.` });
+      f.push({ lo, hi, mid, comps, found: mid, msg: t(`A[${mid}] = ${A[mid]} = ${key}: found after **${comps}** comparison${comps > 1 ? 's' : ''}.`, `A[${mid}] = ${A[mid]} = ${key} : trouvé après **${comps}** comparaison${comps > 1 ? 's' : ''}.`) });
       return f;
     }
     const goLeft = key < A[mid];
-    f.push({ lo, hi, mid, comps, msg: `Middle A[${mid}] = ${A[mid]}. ${key} ${goLeft ? '<' : '>'} ${A[mid]} → keep the ${goLeft ? 'left' : 'right'} half.` });
+    f.push({
+      lo,
+      hi,
+      mid,
+      comps,
+      msg: t(
+        `Middle A[${mid}] = ${A[mid]}. ${key} ${goLeft ? '<' : '>'} ${A[mid]} → keep the ${goLeft ? 'left' : 'right'} half.`,
+        `Milieu A[${mid}] = ${A[mid]}. ${key} ${goLeft ? '<' : '>'} ${A[mid]} → on garde la moitié ${goLeft ? 'gauche' : 'droite'}.`,
+      ),
+    });
     if (goLeft) hi = mid - 1;
     else lo = mid + 1;
   }
-  f.push({ lo, hi, mid: null, comps, msg: `Empty interval: ${key} is not in the array (**${comps}** comparisons).` });
+  f.push({ lo, hi, mid: null, comps, msg: t(`Empty interval: ${key} is not in the array (**${comps}** comparisons).`, `Intervalle vide : ${key} n’est pas dans le tableau (**${comps}** comparaisons).`) });
   return f;
 }
 
@@ -53,7 +63,7 @@ export function BinarySearch({ onSolved, showCosts = false }: { onSolved?: () =>
   return (
     <Panel>
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-sm font-semibold text-muted">Search for:</span>
+        <span className="text-sm font-semibold text-muted">{t('Search for:', 'Chercher :')}</span>
         {[...BS_ARRAY, 60].map((v) => (
           <button key={v} onClick={() => setKey(v)} className={`btn !px-2 font-mono ${key === v ? '!border-brand !bg-brand-soft !text-brand' : ''}`}>
             {v}
@@ -73,12 +83,12 @@ export function BinarySearch({ onSolved, showCosts = false }: { onSolved?: () =>
               );
             })}
           </div>
-          <div className="mt-1 text-center text-xs text-muted">comparisons needed to find each element</div>
+          <div className="mt-1 text-center text-xs text-muted">{t('comparisons needed to find each element', 'comparaisons nécessaires pour trouver chaque élément')}</div>
         </div>
       )}
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="comparisons" value={f.comps} tone="brand" />
-        <Stat label="interval size" value={Math.max(0, f.hi - f.lo + 1)} />
+        <Stat label={t('comparisons', 'comparaisons')} value={f.comps} tone="brand" />
+        <Stat label={t('interval size', 'taille de l’intervalle')} value={Math.max(0, f.hi - f.lo + 1)} />
       </div>
       <Caption tone={f.found !== undefined ? 'ok' : 'neutral'}>{f.msg}</Caption>
       <Controls
@@ -86,7 +96,7 @@ export function BinarySearch({ onSolved, showCosts = false }: { onSolved?: () =>
         extra={
           <label className="inline-flex items-center gap-1.5">
             <input type="checkbox" checked={costs} onChange={(e) => setCosts(e.target.checked)} className="accent-[var(--brand)]" />
-            show costs
+            {t('show costs', 'afficher les coûts')}
           </label>
         }
       />
@@ -216,20 +226,20 @@ export function JosephusCircle({ initialN = 6, onSolved }: { initialN?: number; 
           </text>
         </svg>
         <div className="space-y-2">
-          <Stat label="eliminated" value={s.i} />
-          <Stat label="round" value={s.i === 0 ? 1 : order[s.i - 1].round} />
-          <p className="text-xs text-muted">Small red numbers: the round in which each person was eliminated.</p>
+          <Stat label={t('eliminated', 'éliminés')} value={s.i} />
+          <Stat label={t('round', 'tour')} value={s.i === 0 ? 1 : order[s.i - 1].round} />
+          <p className="text-xs text-muted">{t('Small red numbers: the round in which each person was eliminated.', 'Petits nombres rouges : le tour où chaque personne a été éliminée.')}</p>
         </div>
       </div>
       <Caption tone={finished ? 'ok' : 'neutral'}>
         {finished
-          ? `Person **${survivor}** survives.`
+          ? t(`Person **${survivor}** survives.`, `La personne **${survivor}** survit.`)
           : s.i === 0
-            ? 'Starting with person 1, every second person is eliminated.'
-            : `Person ${last} is eliminated.`}
+            ? t('Starting with person 1, every second person is eliminated.', 'En partant de la personne 1, une personne sur deux est éliminée.')
+            : t(`Person ${last} is eliminated.`, `La personne ${last} est éliminée.`)}
       </Caption>
       <Controls s={s} />
-      <Slider label="people n" value={n} min={2} max={40} onChange={setN} />
+      <Slider label={t('people n', 'personnes n')} value={n} min={2} max={40} onChange={setN} />
     </Panel>
   );
 }
@@ -282,7 +292,7 @@ export function NimGame({ start = 14, m = 3, onSolved }: { start?: number; m?: n
   const take = (who: 'you' | 'cpu', k: number) => {
     const rest = left - k;
     setLeft(rest);
-    setLog((l) => [...l, `${who === 'you' ? 'You' : 'Computer'} took ${k}.`]);
+    setLog((l) => [...l, who === 'you' ? t(`You took ${k}.`, `Vous en prenez ${k}.`) : t(`Computer took ${k}.`, `L’ordinateur en prend ${k}.`)]);
     // Misère rule: whoever takes the last token loses.
     if (rest === 0) setWinner(who === 'you' ? 'cpu' : 'you');
     else setTurn(who === 'you' ? 'cpu' : 'you');
@@ -319,29 +329,41 @@ export function NimGame({ start = 14, m = 3, onSolved }: { start?: number; m?: n
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="tokens left" value={left} tone="brand" />
-        <Stat label="turn" value={winner ? '—' : turn === 'you' ? 'You' : 'Computer…'} />
+        <Stat label={t('tokens left', 'jetons restants')} value={left} tone="brand" />
+        <Stat label={t('turn', 'au tour de')} value={winner ? '—' : turn === 'you' ? t('You', 'Vous') : t('Computer…', 'L’ordinateur…')} />
       </div>
       {winner ? (
         <Caption tone={winner === 'you' ? 'ok' : 'warn'}>
-          {winner === 'you' ? 'The computer had to take the last token — **you win!**' : 'You took the last token — you lose. Try leaving the computer in a *losing position*.'}
+          {winner === 'you'
+            ? t('The computer had to take the last token — **you win!**', 'L’ordinateur a dû prendre le dernier jeton — **vous gagnez !**')
+            : t(
+                'You took the last token — you lose. Try leaving the computer in a *losing position*.',
+                'Vous avez pris le dernier jeton — vous perdez. Essayez de laisser l’ordinateur dans une *position perdante*.',
+              )}
         </Caption>
       ) : (
-        <Caption>{log.length ? log.slice(-2).join(' ') : `Take between 1 and ${m} tokens. Whoever takes the **last** token loses. You start.`}</Caption>
+        <Caption>
+          {log.length
+            ? log.slice(-2).join(' ')
+            : t(
+                `Take between 1 and ${m} tokens. Whoever takes the **last** token loses. You start.`,
+                `Prenez entre 1 et ${m} jetons. Celui qui prend le **dernier** jeton perd. Vous commencez.`,
+              )}
+        </Caption>
       )}
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: m }, (_, i) => i + 1).map((k) => (
           <button key={k} className="btn-primary !px-4" disabled={turn !== 'you' || !!winner || k > left} onClick={() => take('you', k)}>
-            Take {k}
+            {t('Take', 'Prendre')} {k}
           </button>
         ))}
         <button className="btn ml-auto" onClick={reset}>
-          New game
+          {t('New game', 'Nouvelle partie')}
         </button>
       </div>
       <label className="inline-flex items-center gap-2 text-sm font-semibold text-muted">
         <input type="checkbox" checked={showMap} onChange={(e) => setShowMap(e.target.checked)} className="accent-[var(--brand)]" />
-        show winning / losing positions
+        {t('show winning / losing positions', 'afficher les positions gagnantes / perdantes')}
       </label>
       {showMap && (
         <div className="flex flex-wrap gap-1">
@@ -356,7 +378,9 @@ export function NimGame({ start = 14, m = 3, onSolved }: { start?: number; m?: n
               </span>
             );
           })}
-          <span className="w-full text-xs text-muted">Red: losing for the player about to move. Green: winning.</span>
+          <span className="w-full text-xs text-muted">
+            {t('Red: losing for the player about to move. Green: winning.', 'Rouge : perdante pour le joueur qui doit jouer. Vert : gagnante.')}
+          </span>
         </div>
       )}
     </Panel>

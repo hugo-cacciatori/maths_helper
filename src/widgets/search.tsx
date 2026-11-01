@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
+import { t } from '../lib/i18n';
 import { ArrayRow, Caption, Controls, GraphView, Legend, Panel, Stat, useStepper, type CellTone, type GEdge, type GNode } from './kit';
 
 /* ======================= Disk swapper ======================= */
@@ -57,8 +58,8 @@ export function DiskSwapper({ n = 3, onSolved }: { n?: number; onSolved?: () => 
                 onClick={() => swap(i)}
                 disabled={solved || auto}
                 className="mx-0.5 h-8 w-5 rounded text-xs font-bold text-muted transition hover:bg-brand-soft hover:text-brand disabled:opacity-20"
-                aria-label={`Swap disks ${i + 1} and ${i + 2}`}
-                title="Swap these two neighbours"
+                aria-label={t(`Swap disks ${i + 1} and ${i + 2}`, `Échanger les jetons ${i + 1} et ${i + 2}`)}
+                title={t('Swap these two neighbours', 'Échanger ces deux voisins')}
               >
                 ⇄
               </button>
@@ -67,17 +68,25 @@ export function DiskSwapper({ n = 3, onSolved }: { n?: number; onSolved?: () => 
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="moves" value={moves} tone="brand" />
-        <Stat label="goal" value="○○○ ●●●" />
+        <Stat label={t('moves', 'coups')} value={moves} tone="brand" />
+        <Stat label={t('goal', 'but')} value="○○○ ●●●" />
       </div>
       {solved ? (
         <Caption tone={moves === best ? 'ok' : 'warn'}>
           {moves === best
-            ? `Solved in **${moves}** moves — that's the minimum possible!`
-            : `Solved in **${moves}** moves. It can be done in ${best}: never swap two disks that are already in the right relative order.`}
+            ? t(`Solved in **${moves}** moves — that's the minimum possible!`, `Résolu en **${moves}** coups — c’est le minimum possible !`)
+            : t(
+                `Solved in **${moves}** moves. It can be done in ${best}: never swap two disks that are already in the right relative order.`,
+                `Résolu en **${moves}** coups. C’est faisable en ${best} : n’échangez jamais deux jetons déjà dans le bon ordre l’un par rapport à l’autre.`,
+              )}
         </Caption>
       ) : (
-        <Caption>Click ⇄ between two neighbours to swap them. Goal: all white disks on the left, all black on the right.</Caption>
+        <Caption>
+          {t(
+            'Click ⇄ between two neighbours to swap them. Goal: all white disks on the left, all black on the right.',
+            'Cliquez sur ⇄ entre deux voisins pour les échanger. But : tous les jetons blancs à gauche, tous les noirs à droite.',
+          )}
+        </Caption>
       )}
       <div className="flex gap-2">
         <button
@@ -88,10 +97,10 @@ export function DiskSwapper({ n = 3, onSolved }: { n?: number; onSolved?: () => 
             setAuto(false);
           }}
         >
-          Reset
+          {t('Reset', 'Recommencer')}
         </button>
         <button className="btn" onClick={() => setAuto(true)} disabled={solved || auto}>
-          Show me
+          {t('Show me', 'Montre-moi')}
         </button>
       </div>
     </Panel>
@@ -103,12 +112,14 @@ export function DiskSwapper({ n = 3, onSolved }: { n?: number; onSolved?: () => 
 type SubFrame = { i: number | null; j: number | null; count: number; seenA?: number; msg: string; found?: [number, number][] };
 
 function directFrames(text: string): SubFrame[] {
-  const f: SubFrame[] = [{ i: null, j: null, count: 0, msg: 'For every A, scan everything to its right looking for B.', found: [] }];
+  const f: SubFrame[] = [
+    { i: null, j: null, count: 0, msg: t('For every A, scan everything to its right looking for B.', 'Pour chaque A, parcourir tout ce qui est à sa droite à la recherche d’un B.'), found: [] },
+  ];
   let count = 0;
   const found: [number, number][] = [];
   for (let i = 0; i < text.length; i++) {
     if (text[i] !== 'A') {
-      f.push({ i, j: null, count, msg: `Position ${i} is “${text[i]}”, not an A: skip.`, found: [...found] });
+      f.push({ i, j: null, count, msg: t(`Position ${i} is “${text[i]}”, not an A: skip.`, `La position ${i} est « ${text[i]} », pas un A : on passe.`), found: [...found] });
       continue;
     }
     for (let j = i + 1; j < text.length; j++) {
@@ -117,15 +128,31 @@ function directFrames(text: string): SubFrame[] {
         count++;
         found.push([i, j]);
       }
-      f.push({ i, j, count, msg: hit ? `A at ${i}, B at ${j}: substring found!` : `A at ${i}, ${text[j]} at ${j}: no.`, found: [...found] });
+      f.push({
+        i,
+        j,
+        count,
+        msg: hit
+          ? t(`A at ${i}, B at ${j}: substring found!`, `A en ${i}, B en ${j} : sous-chaîne trouvée !`)
+          : t(`A at ${i}, ${text[j]} at ${j}: no.`, `A en ${i}, ${text[j]} en ${j} : non.`),
+        found: [...found],
+      });
     }
   }
-  f.push({ i: null, j: null, count, msg: `Done: **${count}** substrings, after checking every (A, later letter) pair.`, found });
+  f.push({
+    i: null,
+    j: null,
+    count,
+    msg: t(`Done: **${count}** substrings, after checking every (A, later letter) pair.`, `Terminé : **${count}** sous-chaînes, après avoir vérifié chaque paire (A, lettre suivante).`),
+    found,
+  });
   return f;
 }
 
 function smartFrames(text: string): SubFrame[] {
-  const f: SubFrame[] = [{ i: null, j: null, count: 0, seenA: 0, msg: 'One left-to-right pass. Keep a counter of the A’s seen so far.' }];
+  const f: SubFrame[] = [
+    { i: null, j: null, count: 0, seenA: 0, msg: t('One left-to-right pass. Keep a counter of the A’s seen so far.', 'Un seul passage de gauche à droite. On garde un compteur des A vus jusqu’ici.') },
+  ];
   let count = 0;
   let a = 0;
   for (let j = 0; j < text.length; j++) {
@@ -137,10 +164,15 @@ function smartFrames(text: string): SubFrame[] {
       j,
       count,
       seenA: a,
-      msg: ch === 'A' ? 'An A: one more possible start.' : ch === 'B' ? `A B: it ends one substring for each A seen so far (+${a}).` : 'Neither: nothing to do.',
+      msg:
+        ch === 'A'
+          ? t('An A: one more possible start.', 'Un A : un début possible de plus.')
+          : ch === 'B'
+            ? t(`A B: it ends one substring for each A seen so far (+${a}).`, `Un B : il termine une sous-chaîne pour chaque A vu jusqu’ici (+${a}).`)
+            : t('Neither: nothing to do.', 'Ni l’un ni l’autre : rien à faire.'),
     });
   }
-  f.push({ i: null, j: null, count, seenA: a, msg: `Done: **${count}** substrings in a single pass.` });
+  f.push({ i: null, j: null, count, seenA: a, msg: t(`Done: **${count}** substrings in a single pass.`, `Terminé : **${count}** sous-chaînes en un seul passage.`) });
   return f;
 }
 
@@ -161,9 +193,13 @@ export function SubstringScanner({ text = 'CABAAXBYA', mode, onSolved }: { text?
     <Panel>
       <ArrayRow items={[...text].map((c, k) => ({ id: k, label: c }))} tone={tone} showIndex />
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="substrings" value={f.count} tone="ok" />
-        {mode === 'smart' ? <Stat label="A's seen" value={f.seenA ?? 0} tone="brand" /> : <Stat label="pairs checked" value={Math.max(0, s.i - 1)} tone="brand" />}
-        <Stat label="step" value={`${s.i + 1}/${frames.length}`} />
+        <Stat label={t('substrings', 'sous-chaînes')} value={f.count} tone="ok" />
+        {mode === 'smart' ? (
+          <Stat label={t("A's seen", 'A vus')} value={f.seenA ?? 0} tone="brand" />
+        ) : (
+          <Stat label={t('pairs checked', 'paires vérifiées')} value={Math.max(0, s.i - 1)} tone="brand" />
+        )}
+        <Stat label={t('step', 'étape')} value={`${s.i + 1}/${frames.length}`} />
       </div>
       <Caption>{f.msg}</Caption>
       <Controls s={s} />
@@ -205,12 +241,16 @@ function settle(g: Graph, mode: 'dfs' | 'bfs', st: TravState): TravState {
     s.finished.push(cur);
     popped.push(cur);
   }
-  if (popped.length) s.log += ` ${popped.join(', ')} ${popped.length > 1 ? 'are dead ends' : 'is a dead end'} → ${mode === 'dfs' ? 'popped' : 'dequeued'}.`;
+  if (popped.length)
+    s.log += t(
+      ` ${popped.join(', ')} ${popped.length > 1 ? 'are dead ends' : 'is a dead end'} → ${mode === 'dfs' ? 'popped' : 'dequeued'}.`,
+      ` ${popped.join(', ')} ${popped.length > 1 ? 'sont des impasses' : 'est une impasse'} → ${mode === 'dfs' ? 'dépilé' : 'défilé'}${popped.length > 1 ? 's' : ''}.`,
+    );
   return s;
 }
 
 export function TraversalExplorer({ graph, start, mode, onSolved, width = 420, height = 220 }: { graph: Graph; start: string; mode: 'dfs' | 'bfs'; onSolved?: () => void; width?: number; height?: number }) {
-  const init = (): TravState => settle(graph, mode, { visited: [start], finished: [], frontier: [start], tree: [], log: `Start at ${start}.` });
+  const init = (): TravState => settle(graph, mode, { visited: [start], finished: [], frontier: [start], tree: [], log: t(`Start at ${start}.`, `Départ en ${start}.`) });
   const [st, setSt] = useState(init);
   const [wrong, setWrong] = useState<string | null>(null);
   const done = st.frontier.length === 0;
@@ -227,8 +267,11 @@ export function TraversalExplorer({ graph, start, mode, onSolved, width = 420, h
     if (id !== expected) {
       setWrong(
         st.visited.includes(id)
-          ? `${id} has already been visited.`
-          : `Not yet: we are exploring from ${current}. Pick its first unvisited neighbour in alphabetical order.`,
+          ? t(`${id} has already been visited.`, `${id} a déjà été visité.`)
+          : t(
+              `Not yet: we are exploring from ${current}. Pick its first unvisited neighbour in alphabetical order.`,
+              `Pas encore : on explore depuis ${current}. Choisissez son premier voisin non visité dans l’ordre alphabétique.`,
+            ),
       );
       return;
     }
@@ -239,7 +282,10 @@ export function TraversalExplorer({ graph, start, mode, onSolved, width = 420, h
         visited: [...s.visited, id],
         frontier: [...s.frontier, id],
         tree: [...s.tree, [current!, id]],
-        log: `From ${current}, visit ${id} (${mode === 'dfs' ? 'push' : 'enqueue'}).`,
+        log: t(
+          `From ${current}, visit ${id} (${mode === 'dfs' ? 'push' : 'enqueue'}).`,
+          `Depuis ${current}, on visite ${id} (${mode === 'dfs' ? 'empilé' : 'enfilé'}).`,
+        ),
       }),
     );
   };
@@ -257,14 +303,20 @@ export function TraversalExplorer({ graph, start, mode, onSolved, width = 420, h
       <GraphView nodes={graph.nodes} edges={graph.edges} width={width} height={height} fill={tone} edgeTone={(e) => (isTree(e) ? 'tree' : 'idle')} onNodeClick={choose} />
       <Legend
         items={[
-          { tone: 'active', label: mode === 'dfs' ? 'top of stack (exploring)' : 'front of queue (exploring)' },
-          { tone: 'visit', label: 'visited, still in ' + (mode === 'dfs' ? 'stack' : 'queue') },
-          { tone: 'done', label: 'dead end' },
+          {
+            tone: 'active',
+            label: mode === 'dfs' ? t('top of stack (exploring)', 'haut de la pile (en exploration)') : t('front of queue (exploring)', 'tête de file (en exploration)'),
+          },
+          {
+            tone: 'visit',
+            label: mode === 'dfs' ? t('visited, still in stack', 'visité, encore dans la pile') : t('visited, still in queue', 'visité, encore dans la file'),
+          },
+          { tone: 'done', label: t('dead end', 'impasse') },
         ]}
       />
       <div className="grid gap-2 sm:grid-cols-2">
         <div className="rounded-xl bg-surface-2 px-3 py-2">
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">{mode === 'dfs' ? 'Stack (top →)' : 'Queue (front →)'}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">{mode === 'dfs' ? t('Stack (top →)', 'Pile (haut →)') : t('Queue (front →)', 'File (tête →)')}</div>
           <div className="mt-1 flex min-h-8 flex-wrap gap-1">
             {(mode === 'dfs' ? st.frontier : st.frontier).map((x) => (
               <motion.span layout key={x} className="rounded-md bg-v-visit px-2 py-0.5 font-mono text-sm font-bold text-white">
@@ -275,11 +327,11 @@ export function TraversalExplorer({ graph, start, mode, onSolved, width = 420, h
         </div>
         <div className="rounded-xl bg-surface-2 px-3 py-2 font-mono text-sm">
           <div>
-            <span className="text-xs font-semibold text-muted">visited: </span>
+            <span className="text-xs font-semibold text-muted">{t('visited: ', 'visités : ')}</span>
             {st.visited.join(' ')}
           </div>
           <div>
-            <span className="text-xs font-semibold text-muted">dead ends: </span>
+            <span className="text-xs font-semibold text-muted">{t('dead ends: ', 'impasses : ')}</span>
             {st.finished.join(' ')}
           </div>
         </div>
@@ -287,7 +339,11 @@ export function TraversalExplorer({ graph, start, mode, onSolved, width = 420, h
       {wrong ? (
         <Caption tone="warn">{wrong}</Caption>
       ) : (
-        <Caption tone={done ? 'ok' : 'neutral'}>{done ? `${st.log} All vertices reached — traversal complete!` : `${st.log} Click the next vertex to visit.`}</Caption>
+        <Caption tone={done ? 'ok' : 'neutral'}>
+          {done
+            ? t(`${st.log} All vertices reached — traversal complete!`, `${st.log} Tous les sommets sont atteints — parcours terminé !`)
+            : t(`${st.log} Click the next vertex to visit.`, `${st.log} Cliquez sur le prochain sommet à visiter.`)}
+        </Caption>
       )}
       <div className="flex gap-2">
         <button
@@ -297,10 +353,10 @@ export function TraversalExplorer({ graph, start, mode, onSolved, width = 420, h
             setWrong(null);
           }}
         >
-          Reset
+          {t('Reset', 'Recommencer')}
         </button>
         <button className="btn" disabled={done} onClick={() => expected && choose(expected)}>
-          Show next move
+          {t('Show next move', 'Montrer le coup suivant')}
         </button>
       </div>
     </Panel>
@@ -375,7 +431,7 @@ export function JugPuzzle({ onSolved }: { onSolved?: () => void }) {
         {CAPS.map((cap, k) => {
           const h = (cap / 8) * H;
           return (
-            <button key={k} onClick={() => click(k)} className="flex flex-col items-center gap-2" aria-label={`Jug ${cap} litres`}>
+            <button key={k} onClick={() => click(k)} className="flex flex-col items-center gap-2" aria-label={t(`Jug ${cap} litres`, `Récipient de ${cap} litres`)}>
               <div
                 className="relative w-20 overflow-hidden rounded-b-2xl rounded-t-md border-[3px] transition-all"
                 style={{ height: h, borderColor: sel === k ? 'var(--v-active)' : 'var(--v-idle-stroke)', boxShadow: sel === k ? '0 0 0 4px color-mix(in srgb, var(--v-active) 30%, transparent)' : undefined }}
@@ -401,11 +457,17 @@ export function JugPuzzle({ onSolved }: { onSolved?: () => void }) {
       <Caption tone={solved ? (hist.length - 1 === best.moves ? 'ok' : 'warn') : 'neutral'}>
         {solved
           ? hist.length - 1 === best.moves
-            ? `You measured 4 litres in **${hist.length - 1}** pours — the minimum!`
-            : `4 litres in **${hist.length - 1}** pours. Breadth-first search finds a solution with only ${best.moves}.`
+            ? t(`You measured 4 litres in **${hist.length - 1}** pours — the minimum!`, `Vous avez mesuré 4 litres en **${hist.length - 1}** versements — le minimum !`)
+            : t(
+                `4 litres in **${hist.length - 1}** pours. Breadth-first search finds a solution with only ${best.moves}.`,
+                `4 litres en **${hist.length - 1}** versements. Le parcours en largeur trouve une solution avec seulement ${best.moves}.`,
+              )
           : sel === null
-            ? 'Click a jug to pour **from**…'
-            : `…now click the jug to pour **into**. (You pour until the source is empty or the target is full.)`}
+            ? t('Click a jug to pour **from**…', 'Cliquez sur le récipient **à vider**…')
+            : t(
+                `…now click the jug to pour **into**. (You pour until the source is empty or the target is full.)`,
+                `…puis cliquez sur le récipient **à remplir**. (On verse jusqu’à ce que la source soit vide ou la cible pleine.)`,
+              )}
       </Caption>
       <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
         {hist.map((h, i) => (
@@ -416,7 +478,7 @@ export function JugPuzzle({ onSolved }: { onSolved?: () => void }) {
       </div>
       <div className="flex gap-2">
         <button className="btn" onClick={() => setHist(hist.slice(0, -1))} disabled={hist.length < 2}>
-          Undo
+          {t('Undo', 'Annuler')}
         </button>
         <button
           className="btn"
@@ -425,7 +487,7 @@ export function JugPuzzle({ onSolved }: { onSolved?: () => void }) {
             setSel(null);
           }}
         >
-          Reset
+          {t('Reset', 'Recommencer')}
         </button>
       </div>
     </Panel>
@@ -465,7 +527,7 @@ export function JugBfsLayers() {
       <div className="space-y-1.5">
         {layers.slice(0, s.i + 1).map((layer, d) => (
           <motion.div key={d} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} className="flex flex-wrap items-center gap-1.5">
-            <span className="w-16 shrink-0 text-xs font-semibold text-muted">{d} pour{d === 1 ? '' : 's'}</span>
+            <span className="w-16 shrink-0 text-xs font-semibold text-muted">{d} {t(`pour${d === 1 ? '' : 's'}`, `versement${d > 1 ? 's' : ''}`)}</span>
             {layer.map((st) => (
               <span
                 key={st.join()}

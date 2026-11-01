@@ -1,6 +1,7 @@
 import { CheckCircle2, ChevronRight, History, PlayCircle, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { allLessons, chapters } from '../content';
+import { setLang, t } from '../lib/i18n';
 import { useProgress } from '../lib/store';
 
 export function Home() {
@@ -19,29 +20,38 @@ export function Home() {
         </div>
         <div>
           <div className="text-lg font-extrabold leading-tight">Algo Visual</div>
-          <div className="text-xs font-medium text-muted">Algorithm analysis, one interactive step at a time</div>
+          <div className="text-xs font-medium text-muted">{t('Algorithm analysis, one interactive step at a time', 'L’analyse d’algorithmes, une étape interactive à la fois')}</div>
         </div>
+        <button
+          lang={t('fr', 'en')}
+          className="ml-auto self-start pt-1 text-xs font-semibold text-muted hover:text-brand"
+          onClick={() => setLang(t('fr', 'en'))}
+        >
+          {t('Français', 'English')}
+        </button>
       </header>
 
       <section className="rounded-3xl border border-border bg-surface p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <div className="flex-1">
-            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">See the maths behind algorithms.</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{t('See the maths behind algorithms.', 'Voir les maths derrière les algorithmes.')}</h1>
             <p className="mt-3 max-w-xl text-muted">
-              Guided, hands-on lessons: play with growth curves, step
-              through sorts, traverse graphs and solve the puzzles yourself — with instant feedback.
+              {t(
+                'Guided, hands-on lessons: play with growth curves, step through sorts, traverse graphs and solve the puzzles yourself — with instant feedback.',
+                'Des leçons guidées et pratiques : jouez avec des courbes de croissance, suivez des tris pas à pas, parcourez des graphes et résolvez les énigmes vous-même — avec un retour immédiat.',
+              )}
             </p>
           </div>
           <div className="flex flex-col items-start gap-3 sm:items-end">
             <ProgressRing value={done} total={allLessons.length} />
             {resume && (
               <Link to={`/lesson/${resume.lesson.id}`} className="btn-primary">
-                <PlayCircle size={18} /> {done === 0 ? 'Start learning' : 'Continue'}
+                <PlayCircle size={18} /> {done === 0 ? t('Start learning', 'Commencer') : t('Continue', 'Continuer')}
               </Link>
             )}
             {toReview > 0 && (
               <Link to="/review" className="btn !py-2">
-                <History size={16} /> Review mistakes ({toReview})
+                <History size={16} /> {t('Review mistakes', 'Revoir mes erreurs')} ({toReview})
               </Link>
             )}
           </div>
@@ -49,13 +59,13 @@ export function Home() {
       </section>
 
       <div className="mt-8 flex items-center gap-2">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-muted">Lessons</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-muted">{t('Lessons', 'Leçons')}</h2>
         {done > 0 && (
           <button
             className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-bad"
-            onClick={() => confirm('Reset all progress?') && reset()}
+            onClick={() => confirm(t('Reset all progress?', 'Effacer toute la progression ?')) && reset()}
           >
-            <RotateCcw size={13} /> Reset progress
+            <RotateCcw size={13} /> {t('Reset progress', 'Réinitialiser')}
           </button>
         )}
       </div>
@@ -97,9 +107,9 @@ export function Home() {
                         </div>
                         <p className="mt-1.5 line-clamp-2 text-sm text-muted">{l.summary}</p>
                         <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
-                          {l.warmup && <span className="chip !bg-ok-soft !text-ok">warm-up</span>}
-                          <span className="chip">{l.steps.length} steps</span>
-                          {inProgress && <span className="chip !bg-brand-soft !text-brand">in progress</span>}
+                          {l.warmup && <span className="chip !bg-ok-soft !text-ok">{t('warm-up', 'échauffement')}</span>}
+                          <span className="chip">{l.steps.length} {t('steps', 'étapes')}</span>
+                          {inProgress && <span className="chip !bg-brand-soft !text-brand">{t('in progress', 'en cours')}</span>}
                         </div>
                       </Link>
                     );
@@ -141,7 +151,7 @@ function ProgressRing({ value, total }: { value: number; total: number }) {
         <div className="font-bold">
           {value} / {total}
         </div>
-        <div className="text-muted">lessons done</div>
+        <div className="text-muted">{t('lessons done', 'leçons terminées')}</div>
       </div>
     </div>
   );

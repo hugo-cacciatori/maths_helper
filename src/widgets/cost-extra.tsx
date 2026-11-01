@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
 import { TeX } from '../components/Prose';
+import { t } from '../lib/i18n';
 import { Caption, Controls, Panel, Slider, Stat, useStepper } from './kit';
 
 /* ======================= Call chain (linear recursion) ======================= */
@@ -19,9 +20,21 @@ export function chainFrames(spec: ChainSpec, n: number): ChainFrame[] {
   const values: Record<number, number> = {};
   let ops = 0;
   for (let k = n; k >= spec.base; k--)
-    frames.push({ depth: n - k + 1, values: { ...values }, active: k, ops, msg: k === n ? `Call ${spec.label(k)}.` : `It needs ${spec.label(k)} first: a new call.` });
+    frames.push({
+      depth: n - k + 1,
+      values: { ...values },
+      active: k,
+      ops,
+      msg: k === n ? t(`Call ${spec.label(k)}.`, `Appel de ${spec.label(k)}.`) : t(`It needs ${spec.label(k)} first: a new call.`, `Il faut d’abord ${spec.label(k)} : un nouvel appel.`),
+    });
   values[spec.base] = spec.baseValue;
-  frames.push({ depth: n - spec.base + 1, values: { ...values }, active: spec.base, ops, msg: `${spec.label(spec.base)} is the base case: it returns ${spec.baseValue}.` });
+  frames.push({
+    depth: n - spec.base + 1,
+    values: { ...values },
+    active: spec.base,
+    ops,
+    msg: t(`${spec.label(spec.base)} is the base case: it returns ${spec.baseValue}.`, `${spec.label(spec.base)} est le cas de base : il renvoie ${spec.baseValue}.`),
+  });
   let sub = spec.baseValue;
   for (let k = spec.base + 1; k <= n; k++) {
     const r = spec.combine(k, sub);
@@ -41,7 +54,7 @@ export function CallChain({ spec, initialN = 4, maxN = 7, opName, onSolved }: { 
   const levels = Array.from({ length: n - spec.base + 1 }, (_, i) => n - i);
   return (
     <Panel>
-      <div className="flex flex-col items-start gap-1.5" role="img" aria-label={`Call stack, ${f.depth} calls open`}>
+      <div className="flex flex-col items-start gap-1.5" role="img" aria-label={t(`Call stack, ${f.depth} calls open`, `Pile d’appels, ${f.depth} appels ouverts`)}>
         {levels.map((k, i) => {
           const open = i < f.depth;
           const returned = f.values[k] !== undefined;
@@ -57,14 +70,14 @@ export function CallChain({ spec, initialN = 4, maxN = 7, opName, onSolved }: { 
               }}
             >
               <span className="font-bold">{spec.label(k)}</span>
-              <span className="text-muted">{returned ? `→ ${f.values[k]}` : open ? 'waiting…' : ''}</span>
+              <span className="text-muted">{returned ? `→ ${f.values[k]}` : open ? t('waiting…', 'en attente…') : ''}</span>
             </motion.div>
           );
         })}
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Stat label={opName} value={f.ops} tone="brand" />
-        <Stat label="calls open" value={f.depth} />
+        <Stat label={t('calls open', 'appels ouverts')} value={f.depth} />
       </div>
       <Caption>{f.msg}</Caption>
       <Controls s={s} />
@@ -94,35 +107,35 @@ export function celebrityFrames(knows: number[][]): CelebFrame[] {
   let cand = 0;
   let questions = 0;
   const ruledOut: number[] = [];
-  frames.push({ cand, ruledOut: [], asked: null, questions, phase: 'elim', msg: `Start with ${NAMES[0]} as the candidate.` });
+  frames.push({ cand, ruledOut: [], asked: null, questions, phase: 'elim', msg: t(`Start with ${NAMES[0]} as the candidate.`, `On commence avec ${NAMES[0]} comme candidat.`) });
   for (let i = 1; i < n; i++) {
     const yes = knows[cand][i] === 1;
     questions++;
     if (yes) {
       ruledOut.push(cand);
-      frames.push({ cand: i, ruledOut: [...ruledOut], asked: [cand, i, yes], questions, phase: 'elim', msg: `${NAMES[cand]} knows ${NAMES[i]} → ${NAMES[cand]} can't be the celebrity. New candidate: ${NAMES[i]}.` });
+      frames.push({ cand: i, ruledOut: [...ruledOut], asked: [cand, i, yes], questions, phase: 'elim', msg: t(`${NAMES[cand]} knows ${NAMES[i]} → ${NAMES[cand]} can't be the celebrity. New candidate: ${NAMES[i]}.`, `${NAMES[cand]} connaît ${NAMES[i]} → ${NAMES[cand]} ne peut pas être la célébrité. Nouveau candidat : ${NAMES[i]}.`) });
       cand = i;
     } else {
       ruledOut.push(i);
-      frames.push({ cand, ruledOut: [...ruledOut], asked: [cand, i, yes], questions, phase: 'elim', msg: `${NAMES[cand]} doesn't know ${NAMES[i]} → ${NAMES[i]} can't be the celebrity (not known by everyone).` });
+      frames.push({ cand, ruledOut: [...ruledOut], asked: [cand, i, yes], questions, phase: 'elim', msg: t(`${NAMES[cand]} doesn't know ${NAMES[i]} → ${NAMES[i]} can't be the celebrity (not known by everyone).`, `${NAMES[cand]} ne connaît pas ${NAMES[i]} → ${NAMES[i]} ne peut pas être la célébrité (pas connu de tous).`) });
     }
   }
-  frames.push({ cand, ruledOut: [...ruledOut], asked: null, questions, phase: 'verify', msg: `One question per person ruled out everyone but ${NAMES[cand]}. Now check ${NAMES[cand]} really is a celebrity.` });
+  frames.push({ cand, ruledOut: [...ruledOut], asked: null, questions, phase: 'verify', msg: t(`One question per person ruled out everyone but ${NAMES[cand]}. Now check ${NAMES[cand]} really is a celebrity.`, `Une question par personne a éliminé tout le monde sauf ${NAMES[cand]}. Vérifions maintenant que ${NAMES[cand]} est vraiment une célébrité.`) });
   for (let j = 0; j < n; j++) {
     if (j === cand) continue;
     questions++;
     if (knows[cand][j]) {
-      frames.push({ cand, ruledOut: [...ruledOut], asked: [cand, j, true], questions, phase: 'done', verdict: false, msg: `${NAMES[cand]} knows ${NAMES[j]}: there is no celebrity in this group.` });
+      frames.push({ cand, ruledOut: [...ruledOut], asked: [cand, j, true], questions, phase: 'done', verdict: false, msg: t(`${NAMES[cand]} knows ${NAMES[j]}: there is no celebrity in this group.`, `${NAMES[cand]} connaît ${NAMES[j]} : il n’y a pas de célébrité dans ce groupe.`) });
       return frames;
     }
     questions++;
     if (!knows[j][cand]) {
-      frames.push({ cand, ruledOut: [...ruledOut], asked: [j, cand, false], questions, phase: 'done', verdict: false, msg: `${NAMES[j]} doesn't know ${NAMES[cand]}: there is no celebrity in this group.` });
+      frames.push({ cand, ruledOut: [...ruledOut], asked: [j, cand, false], questions, phase: 'done', verdict: false, msg: t(`${NAMES[j]} doesn't know ${NAMES[cand]}: there is no celebrity in this group.`, `${NAMES[j]} ne connaît pas ${NAMES[cand]} : il n’y a pas de célébrité dans ce groupe.`) });
       return frames;
     }
-    frames.push({ cand, ruledOut: [...ruledOut], asked: [j, cand, true], questions, phase: 'verify', msg: `${NAMES[cand]} doesn't know ${NAMES[j]}, and ${NAMES[j]} knows ${NAMES[cand]}. ✓` });
+    frames.push({ cand, ruledOut: [...ruledOut], asked: [j, cand, true], questions, phase: 'verify', msg: t(`${NAMES[cand]} doesn't know ${NAMES[j]}, and ${NAMES[j]} knows ${NAMES[cand]}. ✓`, `${NAMES[cand]} ne connaît pas ${NAMES[j]}, et ${NAMES[j]} connaît ${NAMES[cand]}. ✓`) });
   }
-  frames.push({ cand, ruledOut: [...ruledOut], asked: null, questions, phase: 'done', verdict: true, msg: `${NAMES[cand]} is the celebrity, found with ${questions} questions.` });
+  frames.push({ cand, ruledOut: [...ruledOut], asked: null, questions, phase: 'done', verdict: true, msg: t(`${NAMES[cand]} is the celebrity, found with ${questions} questions.`, `${NAMES[cand]} est la célébrité, trouvée en ${questions} questions.`) });
   return frames;
 }
 
@@ -144,7 +157,7 @@ export function CelebrityFinder({ onSolved }: { onSolved?: () => void }) {
   });
   return (
     <Panel>
-      <svg viewBox="0 0 300 290" className="mx-auto w-full max-w-xs" role="img" aria-label={`Candidate: ${NAMES[f.cand]}`}>
+      <svg viewBox="0 0 300 290" className="mx-auto w-full max-w-xs" role="img" aria-label={`${t('Candidate:', 'Candidat :')} ${NAMES[f.cand]}`}>
         <defs>
           <marker id="knows-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill="var(--v-active)" />
@@ -162,7 +175,7 @@ export function CelebrityFinder({ onSolved }: { onSolved?: () => void }) {
               <g>
                 <line x1={A.x + ux * 24} y1={A.y + uy * 24} x2={B.x - ux * 28} y2={B.y - uy * 28} stroke="var(--v-active)" strokeWidth={3} strokeDasharray={yes ? undefined : '6 5'} markerEnd="url(#knows-arrow)" />
                 <text x={(A.x + B.x) / 2 - uy * 16} y={(A.y + B.y) / 2 + ux * 16 + 4} textAnchor="middle" fontSize={12} fontWeight={800} fill="var(--v-active)">
-                  {yes ? 'knows' : "doesn't know"}
+                  {yes ? t('knows', 'connaît') : t("doesn't know", 'ne connaît pas')}
                 </text>
               </g>
             );
@@ -183,7 +196,10 @@ export function CelebrityFinder({ onSolved }: { onSolved?: () => void }) {
       </svg>
       <div className="grid grid-cols-2 gap-2">
         <Stat label="questions" value={f.questions} tone="brand" />
-        <Stat label="phase" value={f.phase === 'elim' ? 'eliminate' : f.phase === 'verify' ? 'verify' : 'done'} />
+        <Stat
+          label="phase"
+          value={f.phase === 'elim' ? t('eliminate', 'élimination') : f.phase === 'verify' ? t('verify', 'vérification') : t('done', 'terminé')}
+        />
       </div>
       <Caption tone={f.verdict ? 'ok' : f.verdict === false ? 'warn' : 'neutral'}>{f.msg}</Caption>
       <Controls
@@ -191,7 +207,7 @@ export function CelebrityFinder({ onSolved }: { onSolved?: () => void }) {
         extra={
           <label className="inline-flex items-center gap-1.5">
             <input type="checkbox" checked={noCeleb} onChange={(e) => setNoCeleb(e.target.checked)} className="accent-[var(--brand)]" />
-            group without a celebrity
+            {t('group without a celebrity', 'groupe sans célébrité')}
           </label>
         }
       />
@@ -238,7 +254,7 @@ export function GrillSim({ initialN = 3, onSolved }: { initialN?: number; onSolv
             key={i}
             onClick={() => toggle(i)}
             disabled={x === 2 || done}
-            aria-label={`Burger ${i + 1}, ${x} of 2 sides cooked${sel.includes(i) ? ', on the grill' : ''}`}
+            aria-label={t(`Burger ${i + 1}, ${x} of 2 sides cooked${sel.includes(i) ? ', on the grill' : ''}`, `Steak ${i + 1}, ${x} face(s) sur 2 cuite(s)${sel.includes(i) ? ', sur le gril' : ''}`)}
             className="flex flex-col items-center gap-1"
           >
             <svg width="62" height="62" viewBox="0 0 62 62">
@@ -247,31 +263,34 @@ export function GrillSim({ initialN = 3, onSolved }: { initialN?: number; onSolv
               <path d="M8,31 A23,23 0 0 0 54,31 Z" fill={x >= 2 ? '#7c4a2d' : '#e7a17a'} />
               <line x1="8" y1="31" x2="54" y2="31" stroke="var(--surface)" strokeWidth="2" />
             </svg>
-            <span className="text-[11px] font-bold text-muted">#{i + 1}</span>
+            <span className="text-[11px] font-bold text-muted">{t('#', 'n°')}{i + 1}</span>
           </button>
         ))}
       </div>
       <div className="grid grid-cols-3 gap-2">
         <Stat label="minutes" value={minutes} tone="brand" />
-        <Stat label="on the grill" value={`${sel.length} / 2`} />
-        <Stat label="pairs plan" value={`${pairPlanMinutes(n)} min`} tone="warn" />
+        <Stat label={t('on the grill', 'sur le gril')} value={`${sel.length} / 2`} />
+        <Stat label={t('pairs plan', 'plan par paires')} value={`${pairPlanMinutes(n)} min`} tone="warn" />
       </div>
       <Caption tone={done ? (minutes === best ? 'ok' : 'warn') : 'neutral'}>
         {done
           ? minutes === best
-            ? `All cooked in **${minutes}** minutes — the minimum possible.`
-            : `All cooked in ${minutes} minutes. It can be done in ${best}.`
-          : 'Click up to two burgers to put them on the grill (each cooks its next side), then cook for one minute.'}
+            ? t(`All cooked in **${minutes}** minutes — the minimum possible.`, `Tout est cuit en **${minutes}** minutes — le minimum possible.`)
+            : t(`All cooked in ${minutes} minutes. It can be done in ${best}.`, `Tout est cuit en ${minutes} minutes. C’est faisable en ${best}.`)
+          : t(
+              'Click up to two burgers to put them on the grill (each cooks its next side), then cook for one minute.',
+              'Cliquez sur deux steaks au plus pour les mettre sur le gril (chacun cuit sa face suivante), puis faites cuire une minute.',
+            )}
       </Caption>
       <div className="flex flex-wrap items-center gap-2">
         <button className="btn-primary" onClick={cook} disabled={sel.length === 0 || done}>
-          Cook 1 minute
+          {t('Cook 1 minute', 'Cuire 1 minute')}
         </button>
         <button className="btn" onClick={() => reset()}>
-          Reset
+          {t('Reset', 'Recommencer')}
         </button>
         <div className="min-w-48 flex-1">
-          <Slider label="burgers" value={n} min={1} max={7} onChange={(v) => reset(v)} />
+          <Slider label={t('burgers', 'steaks')} value={n} min={1} max={7} onChange={(v) => reset(v)} />
         </div>
       </div>
     </Panel>
@@ -287,9 +306,9 @@ export function PolyCost() {
   const c = polyCosts(n);
   const max = c.scratch;
   const rows = [
-    { name: 'each power from scratch', v: c.scratch, color: 'var(--bad)' },
-    { name: 'keep the previous power', v: c.incremental, color: 'var(--v-active)' },
-    { name: 'nested form (Horner)', v: c.horner, color: 'var(--v-done)' },
+    { name: t('each power from scratch', 'chaque puissance depuis le début'), v: c.scratch, color: 'var(--bad)' },
+    { name: t('keep the previous power', 'garder la puissance précédente'), v: c.incremental, color: 'var(--v-active)' },
+    { name: t('nested form (Horner)', 'forme imbriquée (Horner)'), v: c.horner, color: 'var(--v-done)' },
   ];
   return (
     <Panel>
@@ -304,22 +323,24 @@ export function PolyCost() {
           </div>
         ))}
       </div>
-      <p className="text-xs text-muted">Multiplications needed for a polynomial of degree n.</p>
-      <Slider label="degree n" value={n} min={1} max={30} onChange={setN} />
+      <p className="text-xs text-muted">{t('Multiplications needed for a polynomial of degree n.', 'Multiplications nécessaires pour un polynôme de degré n.')}</p>
+      <Slider label={t('degree n', 'degré n')} value={n} min={1} max={30} onChange={setN} />
     </Panel>
   );
 }
 
 export function HornerSteps({ coeffs = [2, -6, 2, -1], x = 3, onSolved }: { coeffs?: number[]; x?: number; onSolved?: () => void }) {
   const frames = useMemo(() => {
-    const f: { k: number; acc: number; msg: string }[] = [{ k: 0, acc: coeffs[0], msg: `Start with the leading coefficient: ${coeffs[0]}.` }];
+    const f: { k: number; acc: number; msg: string }[] = [
+      { k: 0, acc: coeffs[0], msg: t(`Start with the leading coefficient: ${coeffs[0]}.`, `On part du coefficient dominant : ${coeffs[0]}.`) },
+    ];
     let acc = coeffs[0];
     for (let k = 1; k < coeffs.length; k++) {
       const next = acc * x + coeffs[k];
       f.push({ k, acc: next, msg: `${acc} × ${x} + (${coeffs[k]}) = ${next}` });
       acc = next;
     }
-    f.push({ k: coeffs.length, acc, msg: `p(${x}) = **${acc}**, with ${coeffs.length - 1} multiplications.` });
+    f.push({ k: coeffs.length, acc, msg: t(`p(${x}) = **${acc}**, with ${coeffs.length - 1} multiplications.`, `p(${x}) = **${acc}**, avec ${coeffs.length - 1} multiplications.`) });
     return f;
   }, [coeffs, x]);
   const s = useStepper(frames.length, onSolved, 1000);
@@ -348,7 +369,7 @@ export function HornerSteps({ coeffs = [2, -6, 2, -1], x = 3, onSolved }: { coef
           </span>
         ))}
       </div>
-      <Stat label="running value" value={f.acc} tone="brand" />
+      <Stat label={t('running value', 'valeur courante')} value={f.acc} tone="brand" />
       <Caption>{f.msg}</Caption>
       <Controls s={s} />
     </Panel>

@@ -3,6 +3,7 @@ import { ArrowLeft, RotateCcw, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { allLessons } from '../content';
+import { t } from '../lib/i18n';
 import { useBackHome } from '../lib/nav';
 import { useProgress } from '../lib/store';
 import { prefersReducedMotion, StepView } from './LessonPlayer';
@@ -24,13 +25,13 @@ export function ReviewPlayer() {
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
-          <Link to="/" onClick={backHome} className="btn !px-2" aria-label="Back to lessons">
+          <Link to="/" onClick={backHome} className="btn !px-2" aria-label={t('Back to lessons', 'Retour aux leçons')}>
             <ArrowLeft size={18} />
           </Link>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-xs font-semibold text-muted">Review mistakes{item ? ` · ${item.lesson.title}` : ''}</div>
+            <div className="truncate text-xs font-semibold text-muted">{t('Review mistakes', 'Revoir mes erreurs')}{item ? ` · ${item.lesson.title}` : ''}</div>
             <div className="font-bold">
-              {finished ? 'Done' : `Question ${pos + 1} of ${queue.length}`}
+              {finished ? t('Done', 'Terminé') : t(`Question ${pos + 1} of ${queue.length}`, `Question ${pos + 1} sur ${queue.length}`)}
             </div>
           </div>
         </div>
@@ -48,20 +49,23 @@ export function ReviewPlayer() {
               <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-ok-soft text-ok">
                 <Sparkles size={38} />
               </div>
-              <h2 className="text-2xl font-extrabold">{queue.length === 0 ? 'Nothing to review' : 'Review finished'}</h2>
+              <h2 className="text-2xl font-extrabold">{queue.length === 0 ? t('Nothing to review', 'Rien à revoir') : t('Review finished', 'Révision terminée')}</h2>
               <p className="mt-2 text-muted">
                 {queue.length === 0
-                  ? 'Questions you get wrong in a lesson will show up here.'
-                  : `${cleared} of ${queue.length} answered right at the first try${cleared < queue.length ? ' — the others stay on your list.' : '.'}`}
+                  ? t('Questions you get wrong in a lesson will show up here.', 'Les questions manquées dans une leçon apparaîtront ici.')
+                  : t(
+                      `${cleared} of ${queue.length} answered right at the first try${cleared < queue.length ? ' — the others stay on your list.' : '.'}`,
+                      `${cleared} sur ${queue.length} réussie(s) du premier coup${cleared < queue.length ? ' — les autres restent dans votre liste.' : '.'}`,
+                    )}
               </p>
               <div className="mt-8 flex flex-col gap-3">
                 {Object.keys(useProgress.getState().missed).length > 0 && (
                   <button className="btn-primary" onClick={() => location.reload()}>
-                    <RotateCcw size={16} /> Review again
+                    <RotateCcw size={16} /> {t('Review again', 'Revoir encore')}
                   </button>
                 )}
                 <Link to="/" onClick={backHome} className="btn !py-2.5">
-                  Back to all lessons
+                  {t('Back to all lessons', 'Retour à toutes les leçons')}
                 </Link>
               </div>
             </motion.div>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { TeX } from '../components/Prose';
+import { dec, num, t } from '../lib/i18n';
 import { SERIES } from './cost';
 import { ArrayRow, Caption, Controls, GraphView, Panel, Slider, Stat, useStepper, type GEdge, type GNode } from './kit';
 
@@ -8,14 +9,30 @@ import { ArrayRow, Caption, Controls, GraphView, Panel, Slider, Stat, useStepper
 type ScanFrame = { i: number; best: number; msg: string };
 
 export function scanFrames(A: number[]): ScanFrame[] {
-  const frames: ScanFrame[] = [{ i: 0, best: 0, msg: `Start: the best so far is the first value, A[0] = ${A[0]}.` }];
+  const frames: ScanFrame[] = [
+    { i: 0, best: 0, msg: t(`Start: the best so far is the first value, A[0] = ${A[0]}.`, `Départ : le meilleur jusqu’ici est la première valeur, A[0] = ${A[0]}.`) },
+  ];
   let best = 0;
   for (let i = 1; i < A.length; i++) {
     const bigger = A[i] > A[best];
     if (bigger) best = i;
-    frames.push({ i, best, msg: `Compare A[${i}] = ${A[i]} with the best so far: ${bigger ? `bigger, so the best is now ${A[i]}` : 'not bigger, keep the best'}.` });
+    frames.push({
+      i,
+      best,
+      msg: t(
+        `Compare A[${i}] = ${A[i]} with the best so far: ${bigger ? `bigger, so the best is now ${A[i]}` : 'not bigger, keep the best'}.`,
+        `On compare A[${i}] = ${A[i]} au meilleur jusqu’ici : ${bigger ? `plus grand, le meilleur est maintenant ${A[i]}` : 'pas plus grand, on garde le meilleur'}.`,
+      ),
+    });
   }
-  frames.push({ i: -1, best, msg: `Done after ${A.length - 1} comparisons: the largest value is ${A[best]}, at index ${best}.` });
+  frames.push({
+    i: -1,
+    best,
+    msg: t(
+      `Done after ${A.length - 1} comparisons: the largest value is ${A[best]}, at index ${best}.`,
+      `Terminé après ${A.length - 1} comparaisons : la plus grande valeur est ${A[best]}, à l’indice ${best}.`,
+    ),
+  });
   return frames;
 }
 
@@ -29,11 +46,11 @@ export function ArrayScan({ values, onSolved }: { values: number[]; onSolved?: (
         items={values.map((v, i) => ({ id: i, label: v }))}
         showIndex
         tone={(i) => (i === f.i ? 'active' : i === f.best ? 'done' : f.i >= 0 && i > f.i ? 'dim' : 'idle')}
-        pointers={[...(f.i >= 0 ? [{ at: f.i, label: 'i' }] : []), { at: f.best, label: 'best', color: 'var(--ok)' }]}
+        pointers={[...(f.i >= 0 ? [{ at: f.i, label: 'i' }] : []), { at: f.best, label: t('best', 'max'), color: 'var(--ok)' }]}
       />
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="best so far" value={values[f.best]} tone="ok" />
-        <Stat label="comparisons" value={f.i < 0 ? values.length - 1 : f.i} tone="brand" />
+        <Stat label={t('best so far', 'meilleur jusqu’ici')} value={values[f.best]} tone="ok" />
+        <Stat label={t('comparisons', 'comparaisons')} value={f.i < 0 ? values.length - 1 : f.i} tone="brand" />
       </div>
       <Caption tone={f.i < 0 ? 'ok' : 'neutral'}>{f.msg}</Caption>
       <Controls s={s} />
@@ -65,11 +82,14 @@ export function HalvingLadder() {
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="halvings to reach 1" value={chain.length - 1} tone="brand" />
-        <Stat label="log₂ n" value={Math.log2(n).toFixed(2)} />
+        <Stat label={t('halvings to reach 1', 'divisions pour atteindre 1')} value={chain.length - 1} tone="brand" />
+        <Stat label="log₂ n" value={dec(Math.log2(n), 2)} />
       </div>
       <Caption>
-        {`Halve (dropping any half) until 1 is left. The number of halvings is $\\lfloor \\log_2 n \\rfloor$ — for $n = ${n}$, ${chain.length - 1}.`}
+        {t(
+          `Halve (dropping any half) until 1 is left. The number of halvings is $\\lfloor \\log_2 n \\rfloor$ — for $n = ${n}$, ${chain.length - 1}.`,
+          `Divisez par deux (en laissant tomber les demis) jusqu’à ce qu’il reste 1. Le nombre de divisions est $\\lfloor \\log_2 n \\rfloor$ — pour $n = ${n}$, ${chain.length - 1}.`,
+        )}
       </Caption>
       <Slider label="n" value={n} min={1} max={1024} onChange={setN} />
     </Panel>
@@ -85,7 +105,7 @@ export function GaussPairs() {
   const H = (n + 1) * cell + 8;
   return (
     <Panel>
-      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto w-full" style={{ maxWidth: W * 1.6 }} role="img" aria-label={`Two staircases of ${n} columns fit into a ${n} by ${n + 1} rectangle`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto w-full" style={{ maxWidth: W * 1.6 }} role="img" aria-label={t(`Two staircases of ${n} columns fit into a ${n} by ${n + 1} rectangle`, `Deux escaliers de ${n} colonnes remplissent un rectangle de ${n} sur ${n + 1}`)}>
         {Array.from({ length: n }, (_, c) => {
           const up = c + 1;
           const x = 4 + c * (cell + 4);
@@ -108,11 +128,18 @@ export function GaussPairs() {
         })}
       </svg>
       <Caption>
-        <span>
-          Blue: <TeX>{`1 + 2 + \\dots + ${n}`}</TeX>. Orange: the same numbers upside down. Each column holds{' '}
-          <TeX>{`${n} + 1 = ${n + 1}`}</TeX> blocks, so both together make <TeX>{`${n} \\times ${n + 1}`}</TeX> and one staircase is half of it:{' '}
-          <TeX>{`\\dfrac{${n} \\times ${n + 1}}{2} = ${(n * (n + 1)) / 2}`}</TeX>.
-        </span>
+        {t(
+          <span>
+            Blue: <TeX>{`1 + 2 + \\dots + ${n}`}</TeX>. Orange: the same numbers upside down. Each column holds{' '}
+            <TeX>{`${n} + 1 = ${n + 1}`}</TeX> blocks, so both together make <TeX>{`${n} \\times ${n + 1}`}</TeX> and one staircase is half of it:{' '}
+            <TeX>{`\\dfrac{${n} \\times ${n + 1}}{2} = ${(n * (n + 1)) / 2}`}</TeX>.
+          </span>,
+          <span>
+            En bleu : <TeX>{`1 + 2 + \\dots + ${n}`}</TeX>. En orange : les mêmes nombres à l’envers. Chaque colonne contient{' '}
+            <TeX>{`${n} + 1 = ${n + 1}`}</TeX> blocs, donc les deux ensemble font <TeX>{`${n} \\times ${n + 1}`}</TeX> et un escalier en est la moitié :{' '}
+            <TeX>{`\\dfrac{${n} \\times ${n + 1}}{2} = ${(n * (n + 1)) / 2}`}</TeX>.
+          </span>,
+        )}
       </Caption>
       <Slider label="n" value={n} min={2} max={12} onChange={setN} />
     </Panel>
@@ -135,16 +162,16 @@ const GROWTH: { tex: string; steps: (n: number) => number }[] = [
 /** Human time for a number of steps at one billion steps per second. */
 export function humanTime(steps: number): string {
   const s = steps / 1e9;
-  if (!Number.isFinite(s) || s > 1e15) return 'longer than the age of the universe';
-  if (s < 1e-6) return 'instant';
+  if (!Number.isFinite(s) || s > 1e15) return t('longer than the age of the universe', 'plus que l’âge de l’univers');
+  if (s < 1e-6) return t('instant', 'instantané');
   if (s < 1e-3) return `${Math.round(s * 1e6)} µs`;
   if (s < 1) return `${Math.round(s * 1e3)} ms`;
   if (s < 60) return `${Math.round(s)} s`;
   if (s < 3600) return `${Math.round(s / 60)} min`;
   if (s < 86400) return `${Math.round(s / 3600)} h`;
-  if (s < 3.15e7) return `${Math.round(s / 86400)} days`;
+  if (s < 3.15e7) return `${Math.round(s / 86400)} ${t('days', 'jours')}`;
   const y = s / 3.15e7;
-  return y < 1e4 ? `${Math.round(y).toLocaleString('en')} years` : `${y.toExponential(0).replace(/e\+(\d+)/, ' × 10^$1')} years`;
+  return y < 1e4 ? `${num(Math.round(y))} ${t('years', 'ans')}` : `${y.toExponential(0).replace(/e\+(\d+)/, ' × 10^$1')} ${t('years', 'ans')}`;
 }
 
 export function GrowthTable() {
@@ -156,9 +183,9 @@ export function GrowthTable() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-muted">
-              <th className="py-1.5 pr-3 font-semibold">cost</th>
-              <th className="py-1.5 pr-3 text-right font-semibold">steps</th>
-              <th className="py-1.5 text-right font-semibold">time</th>
+              <th className="py-1.5 pr-3 font-semibold">{t('cost', 'coût')}</th>
+              <th className="py-1.5 pr-3 text-right font-semibold">{t('steps', 'étapes')}</th>
+              <th className="py-1.5 text-right font-semibold">{t('time', 'temps')}</th>
             </tr>
           </thead>
           <tbody>
@@ -168,7 +195,7 @@ export function GrowthTable() {
               return (
                 <tr key={g.tex} className="border-t border-border">
                   <td className="py-1.5 pr-3"><TeX>{g.tex}</TeX></td>
-                  <td className="py-1.5 pr-3 text-right font-mono">{st < 1e15 ? Math.round(st).toLocaleString('en') : st.toExponential(1)}</td>
+                  <td className="py-1.5 pr-3 text-right font-mono">{st < 1e15 ? num(Math.round(st)) : st.toExponential(1)}</td>
                   <td className={`py-1.5 text-right font-semibold ${slow ? 'text-bad' : 'text-ok'}`}>{humanTime(st)}</td>
                 </tr>
               );
@@ -176,8 +203,13 @@ export function GrowthTable() {
           </tbody>
         </table>
       </div>
-      <Caption>A computer doing one billion steps per second. Move the slider: which rows stay fast?</Caption>
-      <Slider label="n" value={k} min={0} max={SIZES.length - 1} onChange={setK} format={(i) => SIZES[i].toLocaleString('en')} />
+      <Caption>
+        {t(
+          'A computer doing one billion steps per second. Move the slider: which rows stay fast?',
+          'Un ordinateur qui fait un milliard d’étapes par seconde. Déplacez le curseur : quelles lignes restent rapides ?',
+        )}
+      </Caption>
+      <Slider label="n" value={k} min={0} max={SIZES.length - 1} onChange={setK} format={(i) => num(SIZES[i])} />
     </Panel>
   );
 }
@@ -208,8 +240,11 @@ export function NeighbourPicker({ nodes, edges, target, onSolved }: { nodes: GNo
       />
       <Caption tone={done ? 'ok' : 'neutral'}>
         {done
-          ? `Yes: ${target} has ${want.size} neighbours, so its degree is ${want.size}.`
-          : `Click every vertex joined to **${target}** by an edge (click again to unselect). Selected: ${picked.join(', ') || 'none'}.`}
+          ? t(`Yes: ${target} has ${want.size} neighbours, so its degree is ${want.size}.`, `Oui : ${target} a ${want.size} voisins, son degré est donc ${want.size}.`)
+          : t(
+              `Click every vertex joined to **${target}** by an edge (click again to unselect). Selected: ${picked.join(', ') || 'none'}.`,
+              `Cliquez sur chaque sommet relié à **${target}** par une arête (cliquez à nouveau pour désélectionner). Choisis : ${picked.join(', ') || 'aucun'}.`,
+            )}
       </Caption>
     </Panel>
   );
@@ -233,14 +268,20 @@ export function SubsetSwitches({ items, binary = false }: { items: string[]; bin
             aria-pressed={on[i]}
           >
             <span className="font-mono text-lg font-bold">{binary ? (on[i] ? 1 : 0) : it}</span>
-            <span className="text-[11px] opacity-80">{binary ? it : on[i] ? 'yes' : 'no'}</span>
+            <span className="text-[11px] opacity-80">{binary ? it : on[i] ? t('yes', 'oui') : t('no', 'non')}</span>
           </button>
         ))}
       </div>
       <Caption>
         {binary
-          ? `Switches ${on.map((b) => (b ? 1 : 0)).join('')} in binary = ${chosen.length ? chosen.join(' + ') : '0'} = **${value}**. With ${items.length} switches you can write every number from 0 to ${2 ** items.length - 1}: ${2 ** items.length} patterns.`
-          : `Chosen: {${chosen.join(', ')}}. Each of the ${items.length} switches has 2 positions: $2^{${items.length}} = ${2 ** items.length}$ different patterns, one per subset (all off is the empty set).`}
+          ? t(
+              `Switches ${on.map((b) => (b ? 1 : 0)).join('')} in binary = ${chosen.length ? chosen.join(' + ') : '0'} = **${value}**. With ${items.length} switches you can write every number from 0 to ${2 ** items.length - 1}: ${2 ** items.length} patterns.`,
+              `Interrupteurs ${on.map((b) => (b ? 1 : 0)).join('')} en binaire = ${chosen.length ? chosen.join(' + ') : '0'} = **${value}**. Avec ${items.length} interrupteurs, on écrit tous les nombres de 0 à ${2 ** items.length - 1} : ${2 ** items.length} positions.`,
+            )
+          : t(
+              `Chosen: {${chosen.join(', ')}}. Each of the ${items.length} switches has 2 positions: $2^{${items.length}} = ${2 ** items.length}$ different patterns, one per subset (all off is the empty set).`,
+              `Choisis : {${chosen.join(', ')}}. Chacun des ${items.length} interrupteurs a 2 positions : $2^{${items.length}} = ${2 ** items.length}$ combinaisons différentes, une par sous-ensemble (tout éteint, c’est l’ensemble vide).`,
+            )}
       </Caption>
     </Panel>
   );
@@ -268,29 +309,36 @@ export function StackQueue({ onSolved }: { onSolved?: () => void }) {
     setStack((s) => s.slice(0, -1));
     setQueue((q) => q.slice(1));
   };
-  const col = (title: string, xs: string[], hint: string) => (
+  const col = (title: string, isStack: boolean, xs: string[], hint: string) => (
     <div className="flex-1 rounded-xl border border-border p-3">
       <div className="text-xs font-bold uppercase tracking-wide text-muted">{title}</div>
       <div className="text-[11px] text-muted">{hint}</div>
       <div className="mt-2 min-h-12">
-        <ArrayRow items={xs.map((x) => ({ id: x + title, label: x }))} size={38} tone={(i) => (i === (title === 'Stack' ? xs.length - 1 : 0) ? 'active' : 'idle')} />
+        <ArrayRow items={xs.map((x) => ({ id: x + title, label: x }))} size={38} tone={(i) => (i === (isStack ? xs.length - 1 : 0) ? 'active' : 'idle')} />
       </div>
     </div>
   );
   return (
     <Panel>
       <div className="flex flex-wrap gap-2">
-        <button className="btn-primary" onClick={add}>Add {String.fromCharCode(65 + (next % 26))}</button>
-        <button className="btn" onClick={remove} disabled={!stack.length}>Take one out</button>
+        <button className="btn-primary" onClick={add}>
+          {t('Add', 'Ajouter')} {String.fromCharCode(65 + (next % 26))}
+        </button>
+        <button className="btn" onClick={remove} disabled={!stack.length}>
+          {t('Take one out', 'En retirer un')}
+        </button>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
-        {col('Stack', stack, 'takes out the newest (highlighted, right end)')}
-        {col('Queue', queue, 'takes out the oldest (highlighted, left end)')}
+        {col(t('Stack', 'Pile'), true, stack, t('takes out the newest (highlighted, right end)', 'retire le plus récent (en surbrillance, à droite)'))}
+        {col(t('Queue', 'File'), false, queue, t('takes out the oldest (highlighted, left end)', 'retire le plus ancien (en surbrillance, à gauche)'))}
       </div>
       <Caption tone={out.length >= 3 ? 'ok' : 'neutral'}>
         {out.length
-          ? `Taken out — stack: ${out.map((o) => o.s).join(' ')} · queue: ${out.map((o) => o.q).join(' ')}`
-          : 'Add a few letters, then take some out and compare the two.'}
+          ? t(
+              `Taken out — stack: ${out.map((o) => o.s).join(' ')} · queue: ${out.map((o) => o.q).join(' ')}`,
+              `Retirés — pile : ${out.map((o) => o.s).join(' ')} · file : ${out.map((o) => o.q).join(' ')}`,
+            )
+          : t('Add a few letters, then take some out and compare the two.', 'Ajoutez quelques lettres, puis retirez-en et comparez les deux.')}
       </Caption>
     </Panel>
   );
@@ -315,13 +363,13 @@ export function GuessNumber({ max = 100, onSolved }: { max?: number; onSolved?: 
     setGuess('');
     if (g === secret) {
       setWon(true);
-      setLog((l) => [...l, `${g}: found it!`]);
+      setLog((l) => [...l, t(`${g}: found it!`, `${g} : trouvé !`)]);
     } else if (g < secret) {
       setLo((x) => Math.max(x, g + 1));
-      setLog((l) => [...l, `${g}: too small`]);
+      setLog((l) => [...l, t(`${g}: too small`, `${g} : trop petit`)]);
     } else {
       setHi((x) => Math.min(x, g - 1));
-      setLog((l) => [...l, `${g}: too big`]);
+      setLog((l) => [...l, t(`${g}: too big`, `${g} : trop grand`)]);
     }
   };
   const restart = () => {
@@ -333,13 +381,14 @@ export function GuessNumber({ max = 100, onSolved }: { max?: number; onSolved?: 
   };
   return (
     <Panel>
-      <div className="relative h-8 overflow-hidden rounded-lg bg-surface-2" aria-label={`Still possible: ${lo} to ${hi}`}>
+      <div className="relative h-8 overflow-hidden rounded-lg bg-surface-2" aria-label={t(`Still possible: ${lo} to ${hi}`, `Encore possible : de ${lo} à ${hi}`)}>
         <div
           className="absolute inset-y-0 bg-brand/70 transition-all"
           style={{ left: `${((lo - 1) / max) * 100}%`, width: `${((hi - lo + 1) / max) * 100}%` }}
         />
         <div className="relative flex h-full items-center justify-center text-sm font-bold">
-          still possible: {lo} … {hi} ({hi - lo + 1} numbers)
+          {t('still possible', 'encore possible')}
+          {t(':', ' :')} {lo} … {hi} ({hi - lo + 1} {t('numbers', 'nombres')})
         </div>
       </div>
       <form
@@ -357,24 +406,37 @@ export function GuessNumber({ max = 100, onSolved }: { max?: number; onSolved?: 
           value={guess}
           onChange={(e) => setGuess(e.target.value)}
           disabled={won}
-          aria-label="Your guess"
+          aria-label={t('Your guess', 'Votre essai')}
           className="w-28 rounded-xl border border-border bg-surface px-3 py-2 font-mono"
         />
-        <button className="btn-primary" type="submit" disabled={won}>Guess</button>
-        <button className="btn ml-auto" type="button" onClick={restart}>New number</button>
+        <button className="btn-primary" type="submit" disabled={won}>
+          {t('Guess', 'Proposer')}
+        </button>
+        <button className="btn ml-auto" type="button" onClick={restart}>
+          {t('New number', 'Nouveau nombre')}
+        </button>
       </form>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="guesses" value={log.length} tone="brand" />
-        <Stat label="middle of what is left" value={Math.floor((lo + hi) / 2)} />
+        <Stat label={t('guesses', 'essais')} value={log.length} tone="brand" />
+        <Stat label={t('middle of what is left', 'milieu de ce qui reste')} value={Math.floor((lo + hi) / 2)} />
       </div>
       <Caption tone={won ? (log.length <= best ? 'ok' : 'warn') : 'neutral'}>
         {won
           ? log.length <= best
-            ? `Found in ${log.length} guesses — within the ${best} that always suffice when you guess the middle.`
-            : `Found in ${log.length} guesses. Guessing the middle each time never needs more than ${best}: try again with a new number.`
+            ? t(
+                `Found in ${log.length} guesses — within the ${best} that always suffice when you guess the middle.`,
+                `Trouvé en ${log.length} essais — dans les ${best} qui suffisent toujours quand on propose le milieu.`,
+              )
+            : t(
+                `Found in ${log.length} guesses. Guessing the middle each time never needs more than ${best}: try again with a new number.`,
+                `Trouvé en ${log.length} essais. Proposer le milieu à chaque fois n’en demande jamais plus de ${best} : réessayez avec un nouveau nombre.`,
+              )
           : log.length
             ? log.join(' · ')
-            : `I picked a whole number from 1 to ${max}. After each guess I say "too small" or "too big".`}
+            : t(
+                `I picked a whole number from 1 to ${max}. After each guess I say "too small" or "too big".`,
+                `J’ai choisi un nombre entier de 1 à ${max}. Après chaque essai, je dis « trop petit » ou « trop grand ».`,
+              )}
       </Caption>
     </Panel>
   );
@@ -388,14 +450,14 @@ export function SplitLevels() {
   const W = 480;
   return (
     <Panel>
-      <svg viewBox={`0 0 ${W} ${(k + 1) * 34 + 4}`} className="w-full" role="img" aria-label={`${k + 1} levels of pieces for n = ${n}`}>
+      <svg viewBox={`0 0 ${W} ${(k + 1) * 34 + 4}`} className="w-full" role="img" aria-label={t(`${k + 1} levels of pieces for n = ${n}`, `${k + 1} niveaux de morceaux pour n = ${n}`)}>
         {Array.from({ length: k + 1 }, (_, lvl) => {
           const parts = 2 ** lvl;
           const w = (W - 70) / parts;
           return (
             <g key={lvl}>
               <text x={0} y={lvl * 34 + 24} fontSize={12} fontWeight={700} fill="var(--muted)">
-                level {lvl}
+                {t('level', 'niveau')} {lvl}
               </text>
               {Array.from({ length: parts }, (_, p) => (
                 <g key={p}>
@@ -412,11 +474,16 @@ export function SplitLevels() {
         })}
       </svg>
       <div className="grid grid-cols-3 gap-2">
-        <Stat label="levels below the top" value={k} />
-        <Stat label="work per level" value={n} />
+        <Stat label={t('levels below the top', 'niveaux sous le sommet')} value={k} />
+        <Stat label={t('work per level', 'travail par niveau')} value={n} />
         <Stat label="total" value={n * k} tone="brand" />
       </div>
-      <Caption>{`Every level holds all ${n} items, cut into smaller pieces. Halving ${n} down to 1 takes $\\log_2 ${n} = ${k}$ levels, so handling every level costs $n \\log_2 n = ${n} \\times ${k} = ${n * k}$.`}</Caption>
+      <Caption>
+        {t(
+          `Every level holds all ${n} items, cut into smaller pieces. Halving ${n} down to 1 takes $\\log_2 ${n} = ${k}$ levels, so handling every level costs $n \\log_2 n = ${n} \\times ${k} = ${n * k}$.`,
+          `Chaque niveau contient les ${n} éléments, coupés en morceaux plus petits. Diviser ${n} par deux jusqu’à 1 prend $\\log_2 ${n} = ${k}$ niveaux, donc traiter tous les niveaux coûte $n \\log_2 n = ${n} \\times ${k} = ${n * k}$.`,
+        )}
+      </Caption>
       <Slider label="n" value={k} min={1} max={6} onChange={setK} format={(v) => String(2 ** v)} />
     </Panel>
   );

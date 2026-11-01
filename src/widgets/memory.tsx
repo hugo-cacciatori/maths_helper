@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
+import { t } from '../lib/i18n';
 import { ArrayRow, Caption, Controls, Panel, Stat, useStepper, type CellTone } from './kit';
 
 /* ======================= Comparison counting sort ======================= */
@@ -12,23 +13,30 @@ export function comparisonCountingFrames(A: number[]): CcFrame[] {
   const frames: CcFrame[] = [];
   let comps = 0;
   const snap = (i: number | null, j: number | null, msg: string) => frames.push({ i, j, count: [...count], S: [...S], msg, comps });
-  snap(null, null, 'Count[i] will hold the number of elements smaller than A[i].');
+  snap(null, null, t('Count[i] will hold the number of elements smaller than A[i].', 'Count[i] contiendra le nombre d’éléments plus petits que A[i].'));
   for (let i = 0; i < n - 1; i++)
     for (let j = i + 1; j < n; j++) {
       comps++;
       if (A[i] < A[j]) {
         count[j]++;
-        snap(i, j, `${A[i]} < ${A[j]}: Count[${j}] + 1.`);
+        snap(i, j, `${A[i]} < ${A[j]}${t(':', ' :')} Count[${j}] + 1.`);
       } else {
         count[i]++;
-        snap(i, j, `${A[i]} ≥ ${A[j]}: Count[${i}] + 1.`);
+        snap(i, j, `${A[i]} ≥ ${A[j]}${t(':', ' :')} Count[${i}] + 1.`);
       }
     }
   for (let i = 0; i < n; i++) {
     S[count[i]] = A[i];
-    snap(i, null, `${A[i]} has ${count[i]} smaller element${count[i] === 1 ? '' : 's'}: it goes to S[${count[i]}].`);
+    snap(
+      i,
+      null,
+      t(
+        `${A[i]} has ${count[i]} smaller element${count[i] === 1 ? '' : 's'}: it goes to S[${count[i]}].`,
+        `${A[i]} a ${count[i]} élément${count[i] > 1 ? 's' : ''} plus petit${count[i] > 1 ? 's' : ''} : il va en S[${count[i]}].`,
+      ),
+    );
   }
-  snap(null, null, `Sorted with ${comps} comparisons — every pair was compared once.`);
+  snap(null, null, t(`Sorted with ${comps} comparisons — every pair was compared once.`, `Trié avec ${comps} comparaisons — chaque paire a été comparée une fois.`));
   return frames;
 }
 
@@ -49,8 +57,8 @@ export function ComparisonCountingViz({ A, onSolved }: { A: number[]; onSolved?:
         <ArrayRow items={f.S.map((v, k) => ({ id: `s${k}`, label: v ?? '' }))} tone={(k) => (f.S[k] !== null ? 'done' : 'idle')} showIndex size={42} />
       </Row>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="comparisons" value={f.comps} tone="brand" />
-        <Stat label="extra memory" value={`${A.length * 2} cells`} />
+        <Stat label={t('comparisons', 'comparaisons')} value={f.comps} tone="brand" />
+        <Stat label={t('extra memory', 'mémoire en plus')} value={t(`${A.length * 2} cells`, `${A.length * 2} cases`)} />
       </div>
       <Caption>{f.msg}</Caption>
       <Controls s={s} />
@@ -79,23 +87,36 @@ export function distributionFrames(V: Rec[], lo: number, hi: number): DcFrame[] 
   const frames: DcFrame[] = [];
   const snap = (phase: DcFrame['phase'], i: number | null, hotKey: number | null, msg: string) =>
     frames.push({ phase, i, freq: [...freq], out: [...out], hotKey, msg });
-  snap('freq', null, null, `Frequencies are indexed by key, from ${lo} to ${hi}. All start at 0.`);
+  snap('freq', null, null, t(`Frequencies are indexed by key, from ${lo} to ${hi}. All start at 0.`, `Les fréquences sont indexées par clé, de ${lo} à ${hi}. Toutes partent de 0.`));
   V.forEach(([key], i) => {
     freq[key - lo]++;
-    snap('freq', i, key, `Key ${key}: Frequences[${key}] + 1.`);
+    snap('freq', i, key, t(`Key ${key}: Frequences[${key}] + 1.`, `Clé ${key} : Frequences[${key}] + 1.`));
   });
-  for (let t = 1; t < k; t++) {
-    freq[t] += freq[t - 1];
-    snap('cum', null, lo + t, `Cumulate: Frequences[${lo + t}] = ${freq[t]} (number of keys ≤ ${lo + t}).`);
+  for (let q = 1; q < k; q++) {
+    freq[q] += freq[q - 1];
+    snap('cum', null, lo + q, t(`Cumulate: Frequences[${lo + q}] = ${freq[q]} (number of keys ≤ ${lo + q}).`, `Cumul : Frequences[${lo + q}] = ${freq[q]} (nombre de clés ≤ ${lo + q}).`));
   }
   for (let i = V.length - 1; i >= 0; i--) {
     const [key, el] = V[i];
     const pos = freq[key - lo];
     out[pos - 1] = V[i];
     freq[key - lo]--;
-    snap('place', i, key, `(${key}, ${el}) goes to position ${pos}; Frequences[${key}] becomes ${freq[key - lo]}.`);
+    snap(
+      'place',
+      i,
+      key,
+      t(`(${key}, ${el}) goes to position ${pos}; Frequences[${key}] becomes ${freq[key - lo]}.`, `(${key}, ${el}) va en position ${pos} ; Frequences[${key}] devient ${freq[key - lo]}.`),
+    );
   }
-  snap('done', null, null, 'Done. Equal keys kept their original order because we placed elements from right to left.');
+  snap(
+    'done',
+    null,
+    null,
+    t(
+      'Done. Equal keys kept their original order because we placed elements from right to left.',
+      'Terminé. Les clés égales ont gardé leur ordre d’origine car on a placé les éléments de droite à gauche.',
+    ),
+  );
   return frames;
 }
 
@@ -121,7 +142,7 @@ export function DistributionCountingViz({ V, lo, hi, onSolved }: { V: Rec[]; lo:
         <ArrayRow
           items={f.freq.map((v, k) => ({ id: `f${k}`, label: v }))}
           tone={(k) => (lo + k === f.hotKey ? 'visit' : 'idle')}
-          pointers={f.freq.map((_, k) => ({ at: k, label: `key ${lo + k}`, color: 'var(--muted)' }))}
+          pointers={f.freq.map((_, k) => ({ at: k, label: `${t('key', 'clé')} ${lo + k}`, color: 'var(--muted)' }))}
           size={44}
         />
       </Row>

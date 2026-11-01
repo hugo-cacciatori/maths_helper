@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { ArrowLeft, Check, Dices, Lightbulb, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { t } from '../lib/i18n';
 import { useBackHome } from '../lib/nav';
 import { useProgress } from '../lib/store';
 import { freshSeed, rng } from '../lib/random';
@@ -84,7 +85,7 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
     <div ref={root} className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
-          <Link to="/" onClick={backHome} className="btn !px-2" aria-label="Back to lessons">
+          <Link to="/" onClick={backHome} className="btn !px-2" aria-label={t('Back to lessons', 'Retour aux leçons')}>
             <ArrowLeft size={18} />
           </Link>
           <div className="min-w-0 flex-1">
@@ -99,7 +100,7 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
             <button
               key={i}
               onClick={() => goTo(i)}
-              aria-label={`Step ${i + 1}`}
+              aria-label={`${t('Step', 'Étape')} ${i + 1}`}
               aria-current={!finished && i === idx ? 'step' : undefined}
               className={`h-1.5 flex-1 rounded-full transition-colors ${
                 finished || i < idx ? 'bg-ok' : i === idx ? 'bg-brand' : 'bg-border'
@@ -116,16 +117,16 @@ export function LessonPlayer({ lesson, chapter, nextLesson }: { lesson: Lesson; 
               <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-ok-soft text-ok">
                 <Sparkles size={38} />
               </div>
-              <h2 className="text-2xl font-extrabold">Lesson complete!</h2>
+              <h2 className="text-2xl font-extrabold">{t('Lesson complete!', 'Leçon terminée !')}</h2>
               <p className="mt-2 text-muted">{lesson.summary}</p>
               <div className="mt-8 flex flex-col gap-3">
                 {nextLesson && (
                   <button className="btn-primary" onClick={() => navigate(`/lesson/${nextLesson.id}`)}>
-                    Next: {nextLesson.title}
+                    {t('Next', 'Suivante')} : {nextLesson.title}
                   </button>
                 )}
                 <Link to="/" onClick={backHome} className="btn !py-2.5">
-                  Back to all lessons
+                  {t('Back to all lessons', 'Retour à toutes les leçons')}
                 </Link>
               </div>
             </motion.div>
@@ -299,7 +300,7 @@ function ShownStepView({
             </div>
           ) : (
             <button className="inline-flex items-center gap-1.5 text-sm font-semibold text-warn hover:underline" onClick={() => setShowHint(true)}>
-              <Lightbulb size={16} /> Need a hint?
+              <Lightbulb size={16} /> {t('Need a hint?', 'Besoin d’un indice ?')}
             </button>
           )}
         </div>
@@ -355,7 +356,7 @@ function ShownStepView({
               else if (canCheck && !locked) check();
               else if (locked) onAdvance();
             }}
-            placeholder="Your answer"
+            placeholder={t('Your answer', 'Votre réponse')}
             className={`w-48 rounded-xl border-2 bg-surface px-4 py-2.5 font-mono text-lg outline-none transition focus:border-brand ${
               verdict === 'right' ? 'border-ok' : verdict === 'wrong' ? 'border-bad' : 'border-border'
             }`}
@@ -371,7 +372,7 @@ function ShownStepView({
               verdict === 'right' ? 'border-ok bg-ok-soft' : verdict === 'wrong' ? 'border-bad bg-bad-soft' : 'border-border'
             }`}
           >
-            {seq.length === 0 && <span className="px-2 text-sm text-muted">Tap the items below in order…</span>}
+            {seq.length === 0 && <span className="px-2 text-sm text-muted">{t('Tap the items below in order…', 'Touchez les éléments ci-dessous dans l’ordre…')}</span>}
             {seq.map((k, i) => (
               <button
                 key={i}
@@ -381,7 +382,7 @@ function ShownStepView({
                   setVerdict(null);
                 }}
                 className="rounded-lg bg-brand px-3 py-1.5 font-mono text-sm font-bold text-on-brand"
-                title="Remove this and everything after it"
+                title={t('Remove this and everything after it', 'Retirer cet élément et tous les suivants')}
               >
                 {tokens[k]}
               </button>
@@ -423,7 +424,7 @@ function ShownStepView({
                 </div>
                 <div className="max-h-[38vh] min-w-0 flex-1 overflow-y-auto pb-1 text-sm">
                   <div className={`font-bold ${verdict === 'wrong' ? 'text-bad' : 'text-ok'}`}>
-                    {verdict === 'wrong' ? 'Not quite — have another go.' : 'Nice!'}
+                    {verdict === 'wrong' ? t('Not quite — have another go.', 'Pas tout à fait — réessayez.') : t('Nice!', 'Bravo !')}
                   </div>
                   {verdict !== 'wrong' && explain && <Prose text={explain} className="mt-1 text-text" />}
                 </div>
@@ -437,33 +438,33 @@ function ShownStepView({
           <div className="mx-auto flex max-w-4xl items-center justify-end gap-3 px-4 py-3">
             {isQuestion && verdict === 'wrong' && tries >= 2 && (
               <button className="btn !py-2.5" onClick={reveal}>
-                Show answer
+                {t('Show answer', 'Voir la réponse')}
               </button>
             )}
             {onNewNumbers && locked && (
               <button className="btn !py-2.5" onClick={onNewNumbers}>
-                <Dices size={16} /> New numbers
+                <Dices size={16} /> {t('New numbers', 'Nouveaux nombres')}
               </button>
             )}
-            {step.kind === 'task' && !solved && <span className="mr-auto text-sm text-muted">Complete the activity to continue</span>}
+            {step.kind === 'task' && !solved && <span className="mr-auto text-sm text-muted">{t('Complete the activity to continue', 'Terminez l’activité pour continuer')}</span>}
             {step.kind === 'task' && !solved && (
               <button className="btn !py-2.5" onClick={() => setSolved(true)}>
-                Skip
+                {t('Skip', 'Passer')}
               </button>
             )}
             {isQuestion && !locked ? (
               verdict === 'wrong' ? (
                 <button className="btn-primary min-w-32" onClick={retry}>
-                  Try again <Kbd />
+                  {t('Try again', 'Réessayer')} <Kbd />
                 </button>
               ) : (
                 <button className="btn-primary min-w-32" disabled={!canCheck} onClick={check}>
-                  Check <Kbd />
+                  {t('Check', 'Vérifier')} <Kbd />
                 </button>
               )
             ) : (
               <button className="btn-primary min-w-32" disabled={!canContinue} onClick={onAdvance}>
-                Continue <Kbd />
+                {t('Continue', 'Continuer')} <Kbd />
               </button>
             )}
           </div>

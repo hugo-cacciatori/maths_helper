@@ -1,3 +1,4 @@
+import { t } from '../lib/i18n';
 import type { Chapter, Lesson } from '../lib/types';
 import { ch0Lessons } from './lessons/ch0';
 import { ch1Lessons } from './lessons/ch1';
@@ -20,56 +21,56 @@ import { warmups } from './lessons/warmups';
 export const chapters: Chapter[] = [
   {
     id: 'start',
-    title: 'Start here',
-    blurb: 'No background needed: the few ideas every later lesson relies on.',
+    title: t('Start here', 'Pour commencer'),
+    blurb: t('No background needed: the few ideas every later lesson relies on.', 'Aucun prérequis : les quelques idées sur lesquelles reposent toutes les leçons suivantes.'),
     lessons: ch0Lessons,
   },
   {
     id: 'cost',
-    title: 'Measuring cost',
-    blurb: 'How fast functions grow, counting steps, sums and self-calling functions.',
+    title: t('Measuring cost', 'Mesurer le coût'),
+    blurb: t('How fast functions grow, counting steps, sums and self-calling functions.', 'La croissance des fonctions, compter les étapes, les sommes et les fonctions qui s’appellent elles-mêmes.'),
     lessons: [...ch1Lessons, ...ch1xLessons],
   },
   {
     id: 'try-everything',
-    title: 'Try everything',
-    blurb: 'Solve it the direct way, then search every possibility in order.',
+    title: t('Try everything', 'Tout essayer'),
+    blurb: t('Solve it the direct way, then search every possibility in order.', 'Résoudre de la façon la plus directe, puis passer en revue chaque possibilité dans l’ordre.'),
     lessons: [warmups.c2, ...ch2Lessons, ...ch2xLessons],
   },
   {
     id: 'make-it-smaller',
-    title: 'Make it smaller',
-    blurb: 'Solve a smaller copy of the problem, then extend the answer.',
+    title: t('Make it smaller', 'Rendre plus petit'),
+    blurb: t('Solve a smaller copy of the problem, then extend the answer.', 'Résoudre une copie plus petite du problème, puis étendre la réponse.'),
     lessons: [warmups.c3, ...ch3Lessons, ...ch3xLessons],
   },
   {
     id: 'split-in-two',
-    title: 'Split in two',
-    blurb: 'Cut the problem into halves, solve each, put the answers together.',
+    title: t('Split in two', 'Couper en deux'),
+    blurb: t('Cut the problem into halves, solve each, put the answers together.', 'Couper le problème en moitiés, résoudre chacune, puis assembler les réponses.'),
     lessons: [warmups.c4, ...ch4Lessons, ...ch4xLessons],
   },
   {
     id: 'change-the-shape',
-    title: 'Change the shape',
-    blurb: 'Reorganise the data first, then the problem becomes easy.',
+    title: t('Change the shape', 'Changer la forme'),
+    blurb: t('Reorganise the data first, then the problem becomes easy.', 'Réorganiser d’abord les données : le problème devient alors facile.'),
     lessons: [warmups.c5, ...ch5Lessons, ...ch5xLessons],
   },
   {
     id: 'memory-for-speed',
-    title: 'Memory for speed',
-    blurb: 'Use extra space to avoid work.',
+    title: t('Memory for speed', 'De la mémoire pour la vitesse'),
+    blurb: t('Use extra space to avoid work.', 'Utiliser de la place en plus pour éviter du travail.'),
     lessons: [warmups.c6, ...ch6Lessons],
   },
   {
     id: 'best-step-first',
-    title: 'Best step first',
-    blurb: 'Take the most promising move each time — and know when that is safe.',
+    title: t('Best step first', 'Le meilleur pas d’abord'),
+    blurb: t('Take the most promising move each time — and know when that is safe.', 'Jouer à chaque fois le coup le plus prometteur — et savoir quand c’est sûr.'),
     lessons: [warmups.c7, ...ch7Lessons, ...ch7xLessons],
   },
   {
     id: 'puzzle-box',
-    title: 'Puzzle box',
-    blurb: 'Brain-teasers that mix several ideas.',
+    title: t('Puzzle box', 'Boîte à énigmes'),
+    blurb: t('Brain-teasers that mix several ideas.', 'Des casse-tête qui mêlent plusieurs idées.'),
     lessons: [warmups.c8, ...ch8Lessons, ...ch8xLessons],
   },
 ];

@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
+import { t } from '../lib/i18n';
 import { Caption, Controls, Panel, Slider, Stat, TreeView, useStepper, type CellTone, type TNode } from './kit';
 
 /* ======================= River crossing ======================= */
@@ -31,7 +32,7 @@ function People({ bank }: { bank: Bank }) {
       ))}
       {Array.from({ length: bank.kids }, (_, i) => (
         <motion.span layout key={`k${i}`} className="mt-3 flex h-7 w-6 items-end justify-center rounded-t-full rounded-b-md bg-v-active pb-0.5 text-[10px] font-bold text-white">
-          k
+          {t('k', 'e')}
         </motion.span>
       ))}
     </div>
@@ -55,15 +56,18 @@ export function RiverCrossing({ initialN = 2, onSolved }: { initialN?: number; o
     setHist([riverStart(m)]);
   };
   const loads: { l: Load; label: string }[] = [
-    { l: 'kids2', label: 'two kids' },
-    { l: 'kid1', label: 'one kid' },
-    { l: 'soldier', label: 'one soldier' },
+    { l: 'kids2', label: t('two kids', 'deux enfants') },
+    { l: 'kid1', label: t('one kid', 'un enfant') },
+    { l: 'soldier', label: t('one soldier', 'un soldat') },
   ];
   return (
     <Panel>
-      <div className="grid grid-cols-[1fr_72px_1fr] items-stretch gap-2" role="img" aria-label={`Left bank: ${s.left.soldiers} soldiers, ${s.left.kids} kids. Right bank: ${s.right.soldiers} soldiers, ${s.right.kids} kids. Boat on the ${s.boat}.`}>
+      <div className="grid grid-cols-[1fr_72px_1fr] items-stretch gap-2" role="img" aria-label={t(
+          `Left bank: ${s.left.soldiers} soldiers, ${s.left.kids} kids. Right bank: ${s.right.soldiers} soldiers, ${s.right.kids} kids. Boat on the ${s.boat}.`,
+          `Rive gauche : ${s.left.soldiers} soldats, ${s.left.kids} enfants. Rive droite : ${s.right.soldiers} soldats, ${s.right.kids} enfants. Barque à ${s.boat === 'left' ? 'gauche' : 'droite'}.`,
+        )}>
         <div className="rounded-xl bg-surface-2 p-2">
-          <div className="mb-1 text-center text-[11px] font-bold uppercase tracking-wide text-muted">start bank</div>
+          <div className="mb-1 text-center text-[11px] font-bold uppercase tracking-wide text-muted">{t('start bank', 'rive de départ')}</div>
           <People bank={s.left} />
         </div>
         <div className="relative rounded-xl" style={{ background: 'color-mix(in srgb, #3b82f6 30%, transparent)' }}>
@@ -72,42 +76,50 @@ export function RiverCrossing({ initialN = 2, onSolved }: { initialN?: number; o
             animate={{ left: s.boat === 'left' ? '6%' : '50%' }}
             transition={{ type: 'spring', stiffness: 120, damping: 18 }}
             className="absolute top-[42%] h-5 w-[44%] rounded-b-full bg-[#7c4a2d]"
-            title={`boat on the ${s.boat === 'left' ? 'start' : 'far'} bank`}
+            title={s.boat === 'left' ? t('boat on the start bank', 'barque sur la rive de départ') : t('boat on the far bank', 'barque sur l’autre rive')}
           />
-          <div className="absolute inset-x-0 bottom-1 text-center text-[10px] font-bold text-muted">{s.boat === 'left' ? '← boat' : 'boat →'}</div>
+          <div className="absolute inset-x-0 bottom-1 text-center text-[10px] font-bold text-muted">
+            {s.boat === 'left' ? t('← boat', '← barque') : t('boat →', 'barque →')}
+          </div>
         </div>
         <div className="rounded-xl bg-surface-2 p-2">
-          <div className="mb-1 text-center text-[11px] font-bold uppercase tracking-wide text-muted">far bank</div>
+          <div className="mb-1 text-center text-[11px] font-bold uppercase tracking-wide text-muted">{t('far bank', 'autre rive')}</div>
           <People bank={s.right} />
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
         {loads.map(({ l, label }) => (
           <button key={l} className="btn-primary !px-3" disabled={done || !riverMove(s, l)} onClick={() => go(l)}>
-            Row {label} {s.boat === 'left' ? '→' : '←'}
+            {t('Row', 'Faire passer')} {label} {s.boat === 'left' ? '→' : '←'}
           </button>
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="crossings" value={s.crossings} tone="brand" />
-        <Stat label="soldiers across" value={`${s.right.soldiers} / ${n}`} />
+        <Stat label={t('crossings', 'traversées')} value={s.crossings} tone="brand" />
+        <Stat label={t('soldiers across', 'soldats passés')} value={`${s.right.soldiers} / ${n}`} />
       </div>
       <Caption tone={done ? (s.crossings === 4 * n ? 'ok' : 'warn') : 'neutral'}>
         {done
           ? s.crossings === 4 * n
-            ? `Everyone across in **${s.crossings}** crossings, and the kids still have their boat.`
-            : `Done in ${s.crossings} crossings — it can be done in ${4 * n}.`
-          : 'The boat carries two kids, or one kid, or one soldier. Goal: all soldiers on the far bank, both kids back home with the boat.'}
+            ? t(
+                `Everyone across in **${s.crossings}** crossings, and the kids still have their boat.`,
+                `Tout le monde a traversé en **${s.crossings}** traversées, et les enfants ont toujours leur barque.`,
+              )
+            : t(`Done in ${s.crossings} crossings — it can be done in ${4 * n}.`, `Fait en ${s.crossings} traversées — c’est faisable en ${4 * n}.`)
+          : t(
+              'The boat carries two kids, or one kid, or one soldier. Goal: all soldiers on the far bank, both kids back home with the boat.',
+              'La barque porte deux enfants, ou un enfant, ou un soldat. But : tous les soldats sur l’autre rive, les deux enfants revenus chez eux avec la barque.',
+            )}
       </Caption>
       <div className="flex flex-wrap items-center gap-2">
         <button className="btn" onClick={() => setHist(hist.slice(0, -1))} disabled={hist.length < 2}>
-          Undo
+          {t('Undo', 'Annuler')}
         </button>
         <button className="btn" onClick={() => reset()}>
-          Reset
+          {t('Reset', 'Recommencer')}
         </button>
         <div className="min-w-48 flex-1">
-          <Slider label="soldiers" value={n} min={1} max={5} onChange={(v) => reset(v)} />
+          <Slider label={t('soldiers', 'soldats')} value={n} min={1} max={5} onChange={(v) => reset(v)} />
         </div>
       </div>
     </Panel>
@@ -147,7 +159,7 @@ export function GlassRow({ initial, onSolved }: { initial: boolean[]; onSolved?:
             layout
             key={g.id}
             onClick={() => click(i)}
-            aria-label={`Glass ${i + 1}, ${g.full ? 'full' : 'empty'}`}
+            aria-label={g.full ? t(`Glass ${i + 1}, full`, `Verre ${i + 1}, plein`) : t(`Glass ${i + 1}, empty`, `Verre ${i + 1}, vide`)}
             className="relative h-14 w-10 overflow-hidden rounded-b-lg border-[3px]"
             style={{
               borderColor: sel === i ? 'var(--v-active)' : target[i] === g.full ? 'var(--v-done)' : 'var(--v-idle-stroke)',
@@ -159,15 +171,18 @@ export function GlassRow({ initial, onSolved }: { initial: boolean[]; onSolved?:
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="swaps" value={moves} tone="brand" />
-        <Stat label="goal" value="full, empty, full, …" />
+        <Stat label={t('swaps', 'échanges')} value={moves} tone="brand" />
+        <Stat label={t('goal', 'but')} value={t('full, empty, full, …', 'plein, vide, plein, …')} />
       </div>
       <Caption tone={done ? (moves === best ? 'ok' : 'warn') : 'neutral'}>
         {done
           ? moves === best
-            ? `Alternating in **${moves}** swap${moves === 1 ? '' : 's'} — the minimum.`
-            : `Alternating in ${moves} swaps. ${best} would have been enough.`
-          : 'Click two glasses to swap them. Green rim = already right for its position.'}
+            ? t(`Alternating in **${moves}** swap${moves === 1 ? '' : 's'} — the minimum.`, `Alternés en **${moves}** échange${moves > 1 ? 's' : ''} — le minimum.`)
+            : t(`Alternating in ${moves} swaps. ${best} would have been enough.`, `Alternés en ${moves} échanges. ${best} auraient suffi.`)
+          : t(
+              'Click two glasses to swap them. Green rim = already right for its position.',
+              'Cliquez sur deux verres pour les échanger. Bord vert = déjà correct pour sa position.',
+            )}
       </Caption>
       <button
         className="btn self-start"
@@ -177,7 +192,7 @@ export function GlassRow({ initial, onSolved }: { initial: boolean[]; onSolved?:
           setSel(null);
         }}
       >
-        Reset
+        {t('Reset', 'Recommencer')}
       </button>
     </Panel>
   );
@@ -204,7 +219,7 @@ export function HairCutter({ onSolved }: { onSolved?: () => void }) {
   const longest = Math.max(...pieces);
   return (
     <Panel>
-      <div className="space-y-1" role="img" aria-label={`${pieces.length} pieces`}>
+      <div className="space-y-1" role="img" aria-label={t(`${pieces.length} pieces`, `${pieces.length} morceaux`)}>
         {[...pieces]
           .sort((a, b) => b - a)
           .map((p, i) => (
@@ -212,11 +227,18 @@ export function HairCutter({ onSolved }: { onSolved?: () => void }) {
           ))}
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <Stat label="cuts" value={cuts} tone="brand" />
-        <Stat label="pieces" value={`${pieces.length} / ${n}`} />
+        <Stat label={t('cuts', 'coupes')} value={cuts} tone="brand" />
+        <Stat label={t('pieces', 'morceaux')} value={`${pieces.length} / ${n}`} />
       </div>
       <Caption tone={done ? (cuts === best ? 'ok' : 'warn') : 'neutral'}>
-        {done ? (cuts === best ? `${n} pieces with **${cuts}** cuts — the minimum.` : `${n} pieces with ${cuts} cuts. ${best} is possible.`) : 'Each cut is one stroke of the scissors. You may cut several pieces at once by laying them side by side.'}
+        {done
+          ? cuts === best
+            ? t(`${n} pieces with **${cuts}** cuts — the minimum.`, `${n} morceaux en **${cuts}** coupes — le minimum.`)
+            : t(`${n} pieces with ${cuts} cuts. ${best} is possible.`, `${n} morceaux en ${cuts} coupes. ${best} est possible.`)
+          : t(
+              'Each cut is one stroke of the scissors. You may cut several pieces at once by laying them side by side.',
+              'Chaque coupe est un coup de ciseaux. On peut couper plusieurs morceaux à la fois en les posant côte à côte.',
+            )}
       </Caption>
       <div className="flex flex-wrap gap-2">
         <button
@@ -227,7 +249,7 @@ export function HairCutter({ onSolved }: { onSolved?: () => void }) {
             setCuts(cuts + 1);
           }}
         >
-          Line up all pieces, cut them in half
+          {t('Line up all pieces, cut them in half', 'Aligner tous les morceaux, les couper en deux')}
         </button>
         <button
           className="btn"
@@ -238,13 +260,13 @@ export function HairCutter({ onSolved }: { onSolved?: () => void }) {
             setCuts(cuts + 1);
           }}
         >
-          Cut 1 cm off the longest
+          {t('Cut 1 cm off the longest', 'Couper 1 cm du plus long')}
         </button>
         <button className="btn" onClick={() => reset()}>
-          Reset
+          {t('Reset', 'Recommencer')}
         </button>
       </div>
-      <Slider label="length (cm)" value={n} min={2} max={32} onChange={(v) => reset(v)} />
+      <Slider label={t('length (cm)', 'longueur (cm)')} value={n} min={2} max={32} onChange={(v) => reset(v)} />
     </Panel>
   );
 }
@@ -283,7 +305,7 @@ export function BstWalk({ keys, mode, onSolved }: { keys: number[]; mode: 'max' 
     <Panel>
       <TreeView root={tree} fill={tone} colW={44} rowH={58} minWidth={320} />
       <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-xl bg-surface-2 px-3 py-2 font-mono text-sm">
-        <span className="font-sans text-xs font-semibold text-muted">{mode === 'max' ? 'path:' : 'printed:'}</span>
+        <span className="font-sans text-xs font-semibold text-muted">{mode === 'max' ? t('path:', 'chemin :') : t('printed:', 'affichées :')}</span>
         {seen.map((k) => (
           <span key={k} className="rounded-md bg-v-visit px-1.5 py-0.5 font-bold text-white">
             {k}
@@ -293,15 +315,21 @@ export function BstWalk({ keys, mode, onSolved }: { keys: number[]; mode: 'max' 
       <Caption tone={finished ? 'ok' : 'neutral'}>
         {mode === 'max'
           ? finished
-            ? `${cur} has no right child: it is the largest key. ${order.length} nodes visited — the height of the tree plus one at most.`
+            ? t(
+                `${cur} has no right child: it is the largest key. ${order.length} nodes visited — the height of the tree plus one at most.`,
+                `${cur} n’a pas d’enfant droit : c’est la plus grande clé. ${order.length} nœuds visités — au plus la hauteur de l’arbre plus un.`,
+              )
             : s.i === 0
-              ? 'Start at the root and keep going right: larger keys are always on the right.'
-              : `${cur}: anything larger is in its right subtree.`
+              ? t('Start at the root and keep going right: larger keys are always on the right.', 'Partez de la racine et allez toujours à droite : les clés plus grandes sont toujours à droite.')
+              : t(`${cur}: anything larger is in its right subtree.`, `${cur} : tout ce qui est plus grand est dans son sous-arbre droit.`)
           : finished
-            ? 'Every key printed in decreasing order: right subtree, node, left subtree.'
+            ? t('Every key printed in decreasing order: right subtree, node, left subtree.', 'Toutes les clés affichées par ordre décroissant : sous-arbre droit, nœud, sous-arbre gauche.')
             : s.i === 0
-              ? 'Print the right subtree first (larger keys), then the node, then the left subtree.'
-              : `Print ${cur}.`}
+              ? t(
+                  'Print the right subtree first (larger keys), then the node, then the left subtree.',
+                  'Affichez d’abord le sous-arbre droit (clés plus grandes), puis le nœud, puis le sous-arbre gauche.',
+                )
+              : t(`Print ${cur}.`, `On affiche ${cur}.`)}
       </Caption>
       <Controls s={s} />
     </Panel>
@@ -322,17 +350,21 @@ export function BstCompare({ a, b }: { a: number[]; b: number[] }) {
           { t: tb, keys: b, io: ib },
         ].map((x, i) => (
           <div key={i} className="rounded-xl bg-surface-2 p-2">
-            <div className="text-center text-xs font-semibold text-muted">inserted in order {x.keys.join(' ')}</div>
+            <div className="text-center text-xs font-semibold text-muted">
+              {t('inserted in order', 'insérées dans l’ordre')} {x.keys.join(' ')}
+            </div>
             <TreeView root={x.t} r={15} colW={34} rowH={48} />
             <div className="text-center font-mono text-sm">
-              <span className="font-sans text-xs text-muted">in-order: </span>
+              <span className="font-sans text-xs text-muted">{t('in-order: ', 'infixe : ')}</span>
               {x.io.join(' ')}
             </div>
           </div>
         ))}
       </div>
       <Caption tone={same ? 'ok' : 'warn'}>
-        {same ? 'Different shapes, same in-order sequence: they hold exactly the same keys.' : 'The in-order sequences differ: the trees hold different keys.'}
+        {same
+          ? t('Different shapes, same in-order sequence: they hold exactly the same keys.', 'Formes différentes, même suite infixe : ils contiennent exactement les mêmes clés.')
+          : t('The in-order sequences differ: the trees hold different keys.', 'Les suites infixes diffèrent : les arbres contiennent des clés différentes.')}
       </Caption>
     </Panel>
   );
